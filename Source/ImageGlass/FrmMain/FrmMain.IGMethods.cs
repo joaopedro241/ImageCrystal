@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -152,8 +152,6 @@ public partial class FrmMain
             });
         }
 
-        // Collect system garbage
-        Local.GcCollect();
     }
 
 
@@ -880,11 +878,9 @@ public partial class FrmMain
 
         // footer buttons
         var btnDonate = new TaskDialogButton(Config.Language[$"{langPath}._Donate"], allowCloseDialog: false);
-        var btnCheckForUpdate = new TaskDialogButton(Config.Language["_._CheckForUpdate"], allowCloseDialog: false);
         var btnClose = new TaskDialogButton(Config.Language["_._Close"], allowCloseDialog: true);
 
         btnDonate.Click += async (_, _) => await BHelper.OpenUrlAsync("https://imageglass.org/support", "from_about_donate");
-        btnCheckForUpdate.Click += (_, _) => IG_CheckForUpdate(true);
 
         // WebView2 warning
         var webview2Warning = "";
@@ -901,7 +897,7 @@ public partial class FrmMain
         var page = new TaskDialogPage()
         {
             Icon = new TaskDialogIcon(this.Icon),
-            Buttons = [btnDonate, btnCheckForUpdate, btnClose],
+            Buttons = [btnDonate, btnClose],
             SizeToContent = true,
             AllowCancel = true,
             EnableLinks = true,
@@ -946,14 +942,7 @@ public partial class FrmMain
     }
 
 
-    /// <summary>
-    /// Check for updates
-    /// </summary>
-    /// <param name="showNewUpdate"></param>
-    public static void IG_CheckForUpdate(bool? showNewUpdate = null)
-    {
-        Program.CheckForUpdate(showNewUpdate);
-    }
+
 
 
     /// <summary>
@@ -2092,7 +2081,12 @@ public partial class FrmMain
     public void IG_Delete(bool moveToRecycleBin = true)
     {
         var filePath = Local.Images.GetFilePath(Local.CurrentIndex);
-        if (!File.Exists(filePath)) return;
+        if (string.IsNullOrEmpty(filePath)) return;
+        if (IsMissingImageFile(filePath))
+        {
+            DoDeleteFiles(filePath);
+            return;
+        }
 
         PopupResult? result = null;
 
@@ -2134,12 +2128,22 @@ public partial class FrmMain
             try
             {
                 IG_Unload();
-                BHelper.DeleteFile(filePath, moveToRecycleBin);
+                if (!BHelper.DeleteFile(filePath, moveToRecycleBin))
+                {
+                    _ = ViewNextCancellableAsync(0, isSkipCache: true);
+                    return;
+                }
 
 
-                // manually update the change because FileWatcher is disabled when Local.IsBusy = true
-                Local.Images.Remove(Local.CurrentIndex);
-                Gallery.Items.RemoveAt(Local.CurrentIndex);
+                // A shell dialog can dispatch watcher events while deleting. Find the
+                // original path again so an event cannot make us remove its neighbour.
+                var deletedIndex = Local.Images.IndexOf(filePath);
+                if (deletedIndex >= 0)
+                {
+                    Local.Images.Remove(deletedIndex);
+                    Gallery.Items.RemoveAt(deletedIndex);
+                    if (deletedIndex < Local.CurrentIndex) Local.CurrentIndex--;
+                }
 
                 Local.CurrentIndex = Math.Min(Local.Images.Length - 1, Local.CurrentIndex);
                 _ = ViewNextCancellableAsync(0);
@@ -2147,9 +2151,9 @@ public partial class FrmMain
             catch (Exception ex)
             {
                 Config.ShowError(this, ex.Message, title);
+                _ = ViewNextCancellableAsync(0, isSkipCache: true);
             }
-
-            Local.IsBusy = false;
+            finally { Local.IsBusy = false; }
         }
     }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -42,6 +42,8 @@ public class IgMagickReadData : IDisposable
             // Free any other managed objects here.
             MultiFrameImage?.Dispose();
             SingleFrameImage?.Dispose();
+            SingleFrameSource?.Dispose();
+            SingleFrameSource = null;
 
             ExifProfile = null;
             ColorProfile = null;

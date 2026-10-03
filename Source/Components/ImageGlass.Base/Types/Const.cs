@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -25,7 +25,6 @@ namespace ImageGlass.Base;
 /// </summary>
 public static class Const
 {
-    public const string UPDATE_CHANNEL = "stable"; // stable or beta
     public const int MENU_ICON_HEIGHT = 24;
     public const float VIEWER_GRID_SIZE = 9f;
     public const int TOOLBAR_ICON_HEIGHT = 24;
@@ -33,7 +32,7 @@ public static class Const
     public const string CONFIG_CMD_PREFIX = "/";
     public const string DATETIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
     public const string DATE_FORMAT = "yyyy/MM/dd";
-    public const string APP_PROTOCOL = "imageglass";
+    public const string APP_PROTOCOL = "imagecrystal";
     public const string APP_CODE = "2026";
     public const string MS_APPSTORE_ID = "9N33VZK3C7TH";
     public const int MAX_IMAGE_DIMENSION = 16_384;

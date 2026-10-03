@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -199,14 +199,6 @@ internal static class Program
         #endregion
 
 
-        #region CHECK_FOR_UPDATE
-        if (topCmd == IgCommands.CHECK_FOR_UPDATE)
-        {
-            Application.Run(new Tools.FrmUpdate());
-
-            return (int)IgExitCode.Done;
-        }
-        #endregion
 
 
         #region INSTALL_LANGUAGES [string filePaths]

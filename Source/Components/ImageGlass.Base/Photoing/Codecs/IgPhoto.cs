@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -157,7 +157,9 @@ public class IgPhoto(string filePath) : IDisposable
             }
 
             // load image
-            ImgData = await PhotoCodec.LoadAsync(FilePath, options, null, _tokenSrc?.Token);
+            var loaded = await PhotoCodec.LoadAsync(FilePath, options, null, _tokenSrc?.Token);
+            ImgData?.Dispose();
+            ImgData = loaded;
 
             // update metadata for JXR format
             if (Metadata.FileExtension == ".JXR"

@@ -240,7 +240,6 @@ public class IgLang : IDictionary<string, string>
             { "_._Browse", "Browse…" }, //v9.0
             { "_._Reset", "Reset" }, //v9.0
             { "_._ResetToDefault", "Reset to default" }, //v9.0
-            { "_._CheckForUpdate", "Check for update…" }, //v5.0
             { "_._Download", "Download" }, //v9.0
             { "_._Update", "Update" }, //v9.0
             { "_._Website", "Website" }, //v9.0
@@ -528,7 +527,6 @@ public class IgLang : IDictionary<string, string>
             { "FrmMain.MnuHelp", "Help" }, //v7.0
             { "FrmMain.MnuAbout", "About" }, //v3.0
             { "FrmMain.MnuQuickSetup", "Open ImageGlass Quick Setup" }, //v9.0
-            { "FrmMain.MnuCheckForUpdate._NewVersion", "A new version is available!" }, //v5.0
             { "FrmMain.MnuReportIssue", "Report an issue…" }, //v3.0
 
             { "FrmMain.MnuSetDefaultPhotoViewer", "Set default photo viewer" }, //v9.0
@@ -632,7 +630,6 @@ public class IgLang : IDictionary<string, string>
 
             // General > Others
             { "FrmSettings._Others", "Others" },
-            { "FrmSettings._AutoUpdate", "Check for update automatically" },
             { "FrmSettings._EnableMultiInstances", "Allow multiple instances of the program" },
             { "FrmSettings._ShowAppIcon", "Show app icon on the title bar" },
             { "FrmSettings._InAppMessageDuration", "In-app message duration (milliseconds)" },
@@ -661,11 +658,11 @@ public class IgLang : IDictionary<string, string>
             { "FrmSettings._MinEmbeddedThumbnailSize._Width", "Width" },
             { "FrmSettings._MinEmbeddedThumbnailSize._Height", "Height" },
 
-            // Image > Image Booster
-            { "FrmSettings._ImageBooster", "Image Booster" },
-            { "FrmSettings._ImageBoosterCacheCount", "Number of images cached by Image Booster (one direction)" },
-            { "FrmSettings._ImageBoosterCacheMaxDimension", "Maximum image dimension to be cached (in pixels)" },
-            { "FrmSettings._ImageBoosterCacheMaxFileSizeInMb", "Maximum image file size to be cached (in megabytes)" },
+            // Image > Neighbour preloading
+            { "FrmSettings._NeighbourImageCache", "Neighbour preloading" },
+            { "FrmSettings._NeighbourPreloadCount", "Images to preload in each direction (0 disables preloading)" },
+            { "FrmSettings._NeighbourPreloadMaxDimension", "Maximum image dimension to be cached (in pixels)" },
+            { "FrmSettings._NeighbourPreloadMaxFileSizeInMb", "Maximum image file size to be cached (in megabytes)" },
 
             // Image > Color management
             { "FrmSettings._ColorManagement", "Color management" },

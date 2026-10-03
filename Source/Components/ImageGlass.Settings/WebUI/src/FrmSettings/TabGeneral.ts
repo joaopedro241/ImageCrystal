@@ -1,9 +1,6 @@
 import { getChangedSettingsFromTab } from '@/helpers';
 
 export default class TabGeneral {
-  private static get isOriginalAutoUpdateEnabled() {
-    return _pageSettings.config.AutoUpdate !== '0';
-  }
 
   /**
    * Loads settings for tab General.
@@ -13,8 +10,6 @@ export default class TabGeneral {
     query('#Lnk_ConfigDir').title = _pageSettings.configDir || '(unknown)';
     query('#Lnk_UserConfigFile').title = _pageSettings.userConfigFilePath || '(unknown)';
 
-    // AutoUpdate is a string
-    query<HTMLInputElement>('[name="AutoUpdate"]').checked = TabGeneral.isOriginalAutoUpdateEnabled;
 
     // ImageInfoTags is a string array
     const imgTags = _pageSettings.config.ImageInfoTags as number[] || [];
@@ -46,18 +41,6 @@ export default class TabGeneral {
    */
   static exportSettings() {
     const settings = getChangedSettingsFromTab('general');
-
-    // convert AutoUpdate back to string
-    const isNewAutoUpdateEnabled = settings.AutoUpdate === true;
-    if (isNewAutoUpdateEnabled !== TabGeneral.isOriginalAutoUpdateEnabled) {
-      settings.AutoUpdate = settings.AutoUpdate
-        ? new Date().toISOString()
-        : '0';
-    }
-    else {
-      delete settings.AutoUpdate;
-    }
-
 
     // ImageInfoTags
     settings.ImageInfoTags = TabGeneral.getImageInfoTags();

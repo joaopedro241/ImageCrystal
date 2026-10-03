@@ -1,4 +1,4 @@
-﻿using ImageGlass.Base;
+using ImageGlass.Base;
 
 namespace ImageGlass
 {
@@ -149,7 +149,6 @@ namespace ImageGlass
             MnuSettings = new ToolStripMenuItem();
             MnuHelp = new ToolStripMenuItem();
             MnuAbout = new ToolStripMenuItem();
-            MnuCheckForUpdate = new ToolStripMenuItem();
             MnuReportIssue = new ToolStripMenuItem();
             MnuQuickSetup = new ToolStripMenuItem();
             toolStripMenuItem22 = new ToolStripSeparator();
@@ -1041,7 +1040,7 @@ namespace ImageGlass
             // 
             // MnuHelp
             // 
-            MnuHelp.DropDownItems.AddRange(new ToolStripItem[] { MnuAbout, MnuCheckForUpdate, MnuReportIssue, MnuQuickSetup, toolStripMenuItem22, MnuSetDefaultPhotoViewer, MnuRemoveDefaultPhotoViewer });
+            MnuHelp.DropDownItems.AddRange(new ToolStripItem[] { MnuAbout, MnuReportIssue, MnuQuickSetup, toolStripMenuItem22, MnuSetDefaultPhotoViewer, MnuRemoveDefaultPhotoViewer });
             MnuHelp.Image = (Image)resources.GetObject("MnuHelp.Image");
             MnuHelp.ImageAlign = ContentAlignment.MiddleLeft;
             MnuHelp.ImageScaling = ToolStripItemImageScaling.None;
@@ -1056,12 +1055,7 @@ namespace ImageGlass
             MnuAbout.Text = "[About]";
             MnuAbout.Click += MnuAbout_Click;
             // 
-            // MnuCheckForUpdate
             // 
-            MnuCheckForUpdate.Name = "MnuCheckForUpdate";
-            MnuCheckForUpdate.Size = new Size(224, 22);
-            MnuCheckForUpdate.Text = "[A new version is available]";
-            MnuCheckForUpdate.Click += MnuCheckForUpdate_Click;
             // 
             // MnuReportIssue
             // 
@@ -1335,7 +1329,6 @@ namespace ImageGlass
         public ToolStripMenuItem MnuCropTool;
         public ToolStripMenuItem MnuFrameNav;
         public ToolStripMenuItem MnuAbout;
-        public ToolStripMenuItem MnuCheckForUpdate;
         public ToolStripMenuItem MnuReportIssue;
         public ToolStripMenuItem MnuQuickSetup;
         private ToolStripSeparator toolStripSeparator1;

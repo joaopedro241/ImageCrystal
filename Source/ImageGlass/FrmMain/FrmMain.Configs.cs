@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -340,9 +340,6 @@ public partial class FrmMain
         MnuScaleToFit.Tag = new ModernMenuItemTag() { SingleSelect = true };
         MnuScaleToFill.Tag = new ModernMenuItemTag() { SingleSelect = true };
 
-
-        // File watcher
-        SetupFileWatcher();
 
 
         Local.ImageTransform.Changed += ImageTransform_Changed;

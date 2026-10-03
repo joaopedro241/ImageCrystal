@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -41,7 +41,7 @@ public partial class FrmSlideshow : ThemedForm
 
     private CancellationTokenSource? _loadCancelTokenSrc = new();
     private MovableForm? _movableForm;
-    private ImageBooster _images = new();
+    private NeighbourImageCache _images = new();
     private int _currentIndex = -1;
     private IgMetadata? _currentMetadata = null;
 
@@ -663,11 +663,11 @@ public partial class FrmSlideshow : ThemedForm
                 Config.ImageLoadingOrderType,
                 Config.ShouldGroupImagesByDirectory);
 
-            _images = new ImageBooster(list)
+            _images = new NeighbourImageCache(list)
             {
-                MaxQueue = 1,
-                MaxFileSizeInMbToCache = 100,
-                MaxImageDimensionToCache = Const.MAX_IMAGE_DIMENSION,
+                MaxQueue = Config.NeighbourPreloadCount,
+                MaxFileSizeInMbToCache = Config.NeighbourPreloadMaxFileSizeInMb,
+                MaxImageDimensionToCache = Config.NeighbourPreloadMaxDimension,
             };
 
             if (string.IsNullOrEmpty(initFilePath))
@@ -960,10 +960,6 @@ public partial class FrmSlideshow : ThemedForm
             }
         }
 
-        // Collect system garbage
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
     }
 
     #endregion // Load image
@@ -2243,7 +2239,7 @@ public partial class FrmSlideshow : ThemedForm
         {
             try
             {
-                BHelper.DeleteFile(filePath, moveToRecycleBin);
+                if (!BHelper.DeleteFile(filePath, moveToRecycleBin)) return;
 
                 _images.Remove(_currentIndex);
                 _currentIndex = Math.Min(_images.Length - 1, _currentIndex);

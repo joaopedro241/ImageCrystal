@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -82,10 +82,6 @@ public partial class FrmAbout : WebForm
         if (e.Name.Equals("BtnImageGlassStore", StringComparison.OrdinalIgnoreCase))
         {
             BHelper.OpenImageGlassMsStore();
-        }
-        else if (e.Name.Equals("BtnCheckForUpdate", StringComparison.OrdinalIgnoreCase))
-        {
-            FrmMain.IG_CheckForUpdate(true);
         }
         else if (e.Name.Equals("BtnDonate", StringComparison.OrdinalIgnoreCase))
         {

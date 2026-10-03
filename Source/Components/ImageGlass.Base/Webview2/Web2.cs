@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -319,7 +319,7 @@ public class Web2 : WebView2
 
         var options = new CoreWebView2EnvironmentOptions
         {
-            AdditionalBrowserArguments = "--disable-web-security --allow-file-access-from-files --allow-file-access",
+            AdditionalBrowserArguments = "--disable-web-security --allow-file-access-from-files --allow-file-access --disable-background-networking --disable-component-update",
         };
 
         try
@@ -355,6 +355,16 @@ public class Web2 : WebView2
             // DevTools
             this.CoreWebView2.Settings.AreDevToolsEnabled = true;
 
+            // Settings and SVGs are local documents. Embedded remote assets must not
+            // generate requests; explicit help links still open in the user's browser.
+            this.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            this.CoreWebView2.WebResourceRequested += (_, e) =>
+            {
+                if (Uri.TryCreate(e.Request.Uri, UriKind.Absolute, out var uri)
+                    && (uri.Scheme == "http" || uri.Scheme == "https"))
+                    e.Response = this.CoreWebView2.Environment.CreateWebResourceResponse(
+                        Stream.Null, 403, "Offline viewer", "Content-Type: text/plain");
+            };
             this.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
             this.CoreWebView2.ContextMenuRequested += CoreWebView2_ContextMenuRequested;
 

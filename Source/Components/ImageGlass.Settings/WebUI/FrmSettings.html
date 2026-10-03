@@ -221,10 +221,7 @@
       <section>
         <header lang-text="FrmSettings._Others">[Others]</header>
         <div class="mb-2">
-          <label class="ig-checkbox">
-            <input type="checkbox" name="AutoUpdate" />
-            <div lang-text="FrmSettings._AutoUpdate">[AutoUpdate]</div>
-          </label>
+
         </div>
         <div class="mb-2">
           <label class="ig-checkbox">
@@ -366,12 +363,12 @@
       </section>
 
 
-      <!-- Image > Image booster -->
+      <!-- Image > Neighbour preloading -->
       <section>
-        <header lang-text="FrmSettings._ImageBooster">[Image booster]</header>
+        <header lang-text="FrmSettings._NeighbourImageCache">[Neighbour preloading]</header>
         <div class="mb-3">
-          <div class="mb-1" lang-text="FrmSettings._ImageBoosterCacheCount">[ImageBoosterCacheCount]</div>
-          <select name="ImageBoosterCacheCount" required>
+          <div class="mb-1" lang-text="FrmSettings._NeighbourPreloadCount">[NeighbourPreloadCount]</div>
+          <select name="NeighbourPreloadCount" required>
             <option value="0">0</option>
             <option value="1">1</option>
             <option value="2">2</option>
@@ -386,15 +383,15 @@
           </select>
         </div>
         <div class="mb-3">
-          <div class="mb-1" lang-text="FrmSettings._ImageBoosterCacheMaxDimension">
-            [ImageBoosterCacheMaxDimension]</div>
-          <input type="number" name="ImageBoosterCacheMaxDimension" required min="0" max="100000" placeholder="8000" title="0 ≤ x ≤ 100,000" />
+          <div class="mb-1" lang-text="FrmSettings._NeighbourPreloadMaxDimension">
+            [NeighbourPreloadMaxDimension]</div>
+          <input type="number" name="NeighbourPreloadMaxDimension" required min="0" max="100000" placeholder="8000" title="0 ≤ x ≤ 100,000" />
         </div>
         <div class="mb-3">
-          <div class="mb-1" lang-text="FrmSettings._ImageBoosterCacheMaxFileSizeInMb">
-            [ImageBoosterCacheMaxFileSizeInMb]
+          <div class="mb-1" lang-text="FrmSettings._NeighbourPreloadMaxFileSizeInMb">
+            [NeighbourPreloadMaxFileSizeInMb]
           </div>
-          <input type="number" name="ImageBoosterCacheMaxFileSizeInMb" required min="0" max="1048" placeholder="100" title="0 ≤ x ≤ 1,048" />
+          <input type="number" name="NeighbourPreloadMaxFileSizeInMb" required min="0" max="1048" placeholder="100" title="0 ≤ x ≤ 1,048" />
         </div>
       </section>
 

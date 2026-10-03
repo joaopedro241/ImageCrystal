@@ -43,10 +43,10 @@ export default class TabImage {
   static exportSettings() {
     const settings = getChangedSettingsFromTab('image');
 
-    // ImageBoosterCacheCount
-    settings.ImageBoosterCacheCount = +(settings.ImageBoosterCacheCount || 0);
-    if (settings.ImageBoosterCacheCount === _pageSettings.config.ImageBoosterCacheCount) {
-      delete settings.ImageBoosterCacheCount;
+    // NeighbourPreloadCount
+    settings.NeighbourPreloadCount = +(settings.NeighbourPreloadCount || 0);
+    if (settings.NeighbourPreloadCount === _pageSettings.config.NeighbourPreloadCount) {
+      delete settings.NeighbourPreloadCount;
     }
 
 

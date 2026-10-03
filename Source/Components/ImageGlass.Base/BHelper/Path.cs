@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -189,15 +189,7 @@ public partial class BHelper
 
         try
         {
-            var ub = new UriBuilder(url);
-            var queries = HttpUtility.ParseQueryString(ub.Query);
-            queries["utm_source"] = "app_" + App.Version;
-            queries["utm_medium"] = "app_click";
-            queries["utm_campaign"] = campaign;
-
-            ub.Query = queries.ToString();
-
-            _ = await Launcher.LaunchUriAsync(ub.Uri);
+            _ = await Launcher.LaunchUriAsync(new Uri(url));
         }
         catch { }
     }
@@ -247,15 +239,16 @@ public partial class BHelper
     /// </summary>
     /// <param name="filePath">Full file path to delete</param>
     /// <param name="moveToRecycleBin"><c>true</c>: Move to Recycle bin; <c>false</c>: Delete permanently</param>
-    public static void DeleteFile(string filePath, bool moveToRecycleBin = true)
+    public static bool DeleteFile(string filePath, bool moveToRecycleBin = true)
     {
         var option = moveToRecycleBin ? RecycleOption.SendToRecycleBin : RecycleOption.DeletePermanently;
 
         try
         {
             Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(filePath, UIOption.OnlyErrorDialogs, option);
+            return !File.Exists(filePath);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { return false; }
     }
 
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -41,7 +41,6 @@ public static class IgCommands
 
 
     public static string QUICK_SETUP => "quick-setup";
-    public static string CHECK_FOR_UPDATE => "check-for-update";
     public static string INSTALL_LANGUAGES => "install-languages";
     public static string INSTALL_THEMES => "install-themes";
     public static string UNINSTALL_THEME => "uninstall-theme";

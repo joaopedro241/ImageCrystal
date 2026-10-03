@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -27,7 +27,7 @@ public class App
     /// <summary>
     /// Gets the application executable path
     /// </summary>
-    public static string IGExePath => StartUpDir("ImageGlass.exe");
+    public static string IGExePath => StartUpDir("ImageCrystal.exe");
 
 
     /// <summary>
@@ -102,7 +102,7 @@ public class App
     /// </summary>
     public static bool CheckStartWithOs()
     {
-        const string APP_NAME = "ImageGlass";
+        const string APP_NAME = "ImageCrystal";
         var regAppPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
 
@@ -128,7 +128,7 @@ public class App
     public static Exception? SetStartWithOs(bool enable)
     {
         Exception? error = null;
-        const string APP_NAME = "ImageGlass";
+        const string APP_NAME = "ImageCrystal";
         var regAppPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
         try

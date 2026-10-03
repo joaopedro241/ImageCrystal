@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -26,27 +26,13 @@ namespace ImageGlass;
 
 public partial class FrmMain
 {
-    // the list of local deleted files, need to be deleted in the memory list
-    private readonly List<string> _queueListForDeleting = [];
+
 
     // File system watcher
     private FileSystemWatcherEx _fileWatcher = new();
 
 
-    /// <summary>
-    /// Initializes the file watcher. Only do this once.
-    /// </summary>
-    private void SetupFileWatcher()
-    {
-        // Start thread to watching deleted files
-        var thDeleteWorker = new Thread(new ThreadStart(ProcessDeletedFilesQueue))
-        {
-            Priority = ThreadPriority.BelowNormal,
-            IsBackground = true,
-        };
 
-        thDeleteWorker.Start();
-    }
 
 
     /// <summary>
@@ -77,18 +63,16 @@ public partial class FrmMain
     private void StopFileWatcher()
     {
         _fileWatcher.Stop();
-        _fileWatcher = new()
-        {
-            IncludeSubdirectories = Config.EnableRecursiveLoading,
-
-            // auto Invoke the form if required, no need to invidiually invoke in each event
-            SynchronizingObject = this,
-        };
-
         _fileWatcher.OnCreated -= FileWatcher_OnCreated;
         _fileWatcher.OnDeleted -= FileWatcher_OnDeleted;
         _fileWatcher.OnChanged -= FileWatcher_OnChanged;
         _fileWatcher.OnRenamed -= FileWatcher_OnRenamed;
+        _fileWatcher.Dispose();
+        _fileWatcher = new()
+        {
+            IncludeSubdirectories = Config.EnableRecursiveLoading,
+            SynchronizingObject = this,
+        };
     }
 
 
@@ -236,7 +220,8 @@ public partial class FrmMain
         if (!Config.FileFormats.Contains(ext)) return;
 
         // add to queue list for deleting
-        _queueListForDeleting.Add(e.FullPath);
+        if (!IsDisposed && IsHandleCreated)
+            BeginInvoke((Action)(() => DoDeleteFiles(e.FullPath)));
     }
 
 
@@ -287,26 +272,7 @@ public partial class FrmMain
     }
 
 
-    /// <summary>
-    /// The queue thread to check the files needed to be deleted.
-    /// </summary>
-    private void ProcessDeletedFilesQueue()
-    {
-        while (true)
-        {
-            if (_queueListForDeleting.Count > 0)
-            {
-                var filePath = _queueListForDeleting[0];
-                _queueListForDeleting.RemoveAt(0);
 
-                DoDeleteFiles(filePath);
-            }
-            else
-            {
-                Thread.Sleep(200);
-            }
-        }
-    }
 
 
     /// <summary>
@@ -325,20 +291,17 @@ public partial class FrmMain
         if (imgIndex < 0) return;
 
 
+        var wasCurrent = imgIndex == Local.CurrentIndex;
         // delete image list
         Local.Images.Remove(imgIndex);
+        if (imgIndex < Local.CurrentIndex) Local.CurrentIndex--;
+        Local.CurrentIndex = Math.Min(Local.CurrentIndex, Local.Images.Length - 1);
 
         // delete thumbnail list
         Gallery.Items.RemoveAt(imgIndex);
 
         // change the viewing image to memory data mode
-        if (imgIndex == Local.CurrentIndex)
-        {
-            if (_queueListForDeleting.Count == 0)
-            {
-                _ = ViewNextCancellableAsync(0);
-            }
-        }
+        if (wasCurrent) _ = ViewNextCancellableAsync(0);
 
         // If user deletes the initially loaded image, use the path instead, in case
         // of list re-load.

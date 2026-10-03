@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -282,7 +282,7 @@ public static class ExplorerApi
     {
         _ = UnregisterAppAndExtensions(extensions);
 
-        const string APP_NAME = "ImageGlass";
+        const string APP_NAME = "ImageCrystal";
         var capabilitiesPath = $@"Software\{APP_NAME}\Capabilities";
         using var BASE_KEY = perMachine ? Registry.LocalMachine : Registry.CurrentUser;
         
@@ -396,10 +396,7 @@ public static class ExplorerApi
     /// </param>
     public static Exception? UnregisterAppAndExtensions(string extensions, bool perMachine = false)
     {
-        // remove registry of ImageGlass v8
-        _ = UnregisterAppAndExtensionsLegacy(extensions);
-
-        const string APP_NAME = "ImageGlass";
+        const string APP_NAME = "ImageCrystal";
         using var BASE_KEY = perMachine ? Registry.LocalMachine : Registry.CurrentUser;
 
         try
@@ -455,54 +452,7 @@ public static class ExplorerApi
     }
 
 
-    /// <summary>
-    /// Unregister file type associations and app information from registry for <b>ImageGlass v8</b>.
-    /// </summary>
-    /// <param name="extensions">Extensions string to delete. Ex: <c>.png;.svg;</c></param>
-    public static Exception? UnregisterAppAndExtensionsLegacy(string extensions)
-    {
-        const string APP_NAME = "ImageGlass";
 
-        try
-        {
-            // Unregister the application:
-            // HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications --------------------------------
-            const string regAppPath = @"Software\RegisteredApplications";
-            using (var key = Registry.LocalMachine.OpenSubKey(regAppPath, true))
-            {
-                if (key.OpenSubKey(APP_NAME, true) != null)
-                {
-                    key?.DeleteValue(APP_NAME);
-                }
-            }
-
-
-            // Delete application information:
-            // HKEY_LOCAL_MACHINE\SOFTWARE\ImageGlass --------------------------------------------
-            using (var key = Registry.LocalMachine.OpenSubKey("Software", true))
-            {
-                key?.DeleteSubKeyTree(APP_NAME, false);
-            }
-
-
-            // Delete file type associations
-            // HKEY_CLASSES_ROOT\ImageGlass.AssocFile.<EXT>
-            var exts = extensions.Split(";", StringSplitOptions.RemoveEmptyEntries);
-            foreach (var ext in exts)
-            {
-                var extNoDot = ext[1..].ToUpperInvariant();
-                var extAssocKey = $"{APP_NAME}.AssocFile.{extNoDot}";
-
-                Registry.ClassesRoot.DeleteSubKeyTree(extAssocKey, false);
-            }
-        }
-        catch (Exception ex)
-        {
-            return ex;
-        }
-
-        return null;
-    }
 
 
     /// <summary>

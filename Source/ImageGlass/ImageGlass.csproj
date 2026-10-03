@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -11,11 +11,14 @@
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <CetCompat>false</CetCompat>
 
-        <AssemblyTitle>ImageGlass</AssemblyTitle>
+        <AssemblyName>ImageCrystal</AssemblyName>
+        <RootNamespace>ImageGlass</RootNamespace>
+        <Product>ImageCrystal</Product>
+        <AssemblyTitle>ImageCrystal</AssemblyTitle>
         <Description>A lightweight, versatile image viewer</Description>
         <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
         <Company>Duong Dieu Phap</Company>
-        <Version>9.6.0.801</Version>
+        <Version>9.6.1.807</Version>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

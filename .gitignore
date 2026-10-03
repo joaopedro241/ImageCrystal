@@ -175,3 +175,9 @@ Setup/Assets/WebView2_Runtime/
 */**/.github/skills/*
 /v10/artifacts
 /v10/.github/instructions
+
+# Local build dependencies and test outputs
+.packages/
+artifacts/
+*.log
+.npm-cache/

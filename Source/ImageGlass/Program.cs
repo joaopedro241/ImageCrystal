@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using D2Phap;
 using ImageGlass.Base;
 using ImageGlass.Base.InstanceManagement;
-using ImageGlass.Base.Update;
 using ImageGlass.Base.WinApi;
 using ImageGlass.Settings;
 using System.Diagnostics;
@@ -33,7 +32,7 @@ internal static class Program
     private static string _foregroundShellPath = "";
     private static string _inputImagePathFromArgs = "";
 
-    public static string APP_SINGLE_INSTANCE_ID => "{f2a83de1-b9ac-4461-81d0-cc4547b0b27b}";
+    public static string APP_SINGLE_INSTANCE_ID => "{e4d72b9f-1531-49d4-a87a-49d9c5cc2f60}";
 
     /// <summary>
     /// Gets the path of the image file from the arguments.
@@ -142,8 +141,6 @@ internal static class Program
         // check and run Quick setup
         if (CheckAndRunQuickSetup()) return;
 
-        // check and run auto-update
-        CheckAndRunAutoUpdate();
 
         // checks and runs app instance(s)
         RunAppInstances();
@@ -179,58 +176,10 @@ internal static class Program
 
 
 
-    /// <summary>
-    /// Checks and runs auto-update.
-    /// </summary>
-    private static void CheckAndRunAutoUpdate()
-    {
-        if (Config.AutoUpdate == "0") return;
-
-        if (DateTime.TryParse(Config.AutoUpdate, out var lastUpdate))
-        {
-            // Check for update every 5 days
-            if (DateTime.UtcNow.Subtract(lastUpdate).TotalDays > 5)
-            {
-                CheckForUpdate(false);
-            }
-        }
-        else
-        {
-            CheckForUpdate(false);
-        }
-    }
 
 
-    /// <summary>
-    /// Check for updatae
-    /// </summary>
-    /// <param name="showIfNewUpdate">
-    /// Set to <c>true</c> if you want to show the Update dialog
-    /// when there is a new version. Default value is <c>false</c>.
-    /// </param>
-    public static void CheckForUpdate(bool? showIfNewUpdate = null)
-    {
-        _ = Task.Run(async () =>
-        {
-            showIfNewUpdate ??= false;
-
-            var updater = new UpdateService();
-            await updater.GetUpdatesAsync();
 
 
-            // There is a newer version
-            Config.ShowNewVersionIndicator = updater.HasNewUpdate;
-
-            // save last update
-            Config.AutoUpdate = DateTime.UtcNow.ToISO8601String();
-
-
-            if (updater.HasNewUpdate || showIfNewUpdate.Value)
-            {
-                _ = Config.RunIgcmd(IgCommands.CHECK_FOR_UPDATE);
-            }
-        });
-    }
 
 
     /// <summary>

@@ -156,7 +156,7 @@ public static class Config
     /// <summary>
     /// Gets, sets value of gallery visibility
     /// </summary>
-    public static bool ShowGallery { get; set; } = true;
+    public static bool ShowGallery { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value whether gallery scrollbars visible
@@ -240,10 +240,6 @@ public static class Config
     /// </summary>
     public static bool OpenSaveAsDialogInTheCurrentImageDir { get; set; } = true;
 
-    /// <summary>
-    /// Gets, sets the value indicates that there is a new version
-    /// </summary>
-    public static bool ShowNewVersionIndicator { get; set; } = false;
 
     /// <summary>
     /// Gets, sets the value indicates that to toolbar buttons to be centered horizontally
@@ -328,7 +324,7 @@ public static class Config
     /// <summary>
     /// Enables / Disables the file system watcher.
     /// </summary>
-    public static bool EnableRealTimeFileUpdate { get; set; } = true;
+    public static bool EnableRealTimeFileUpdate { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value indicates that ImageGlass should open the new image file added in the viewing folder.
@@ -443,21 +439,21 @@ public static class Config
     public static int MinDimensionToUseWIC { get; set; } = 16_000;
 
     /// <summary>
-    /// Gets, sets the number of images cached by <see cref="Base.Services.ImageBooster"/>.
+    /// Gets, sets the number of images cached by <see cref="Base.Services.NeighbourImageCache"/>.
     /// </summary>
-    public static int ImageBoosterCacheCount { get; set; } = 1;
+    public static int NeighbourPreloadCount { get; set; } = 0;
 
     /// <summary>
-    /// Gets, sets the maximum image dimension when caching by <see cref="Base.Services.ImageBooster"/>.
+    /// Gets, sets the maximum image dimension when caching by <see cref="Base.Services.NeighbourImageCache"/>.
     /// If this value is <c>less than or equals 0</c>, the option will be ignored.
     /// </summary>
-    public static int ImageBoosterCacheMaxDimension { get; set; } = 9_000;
+    public static int NeighbourPreloadMaxDimension { get; set; } = 9_000;
 
     /// <summary>
-    /// Gets, sets the maximum image file size (in MB) when caching by <see cref="Base.Services.ImageBooster"/>.
+    /// Gets, sets the maximum image file size (in MB) when caching by <see cref="Base.Services.NeighbourImageCache"/>.
     /// If this value is <c>less than or equals 0</c>, the option will be ignored.
     /// </summary>
-    public static float ImageBoosterCacheMaxFileSizeInMb { get; set; } = 100f;
+    public static float NeighbourPreloadMaxFileSizeInMb { get; set; } = 100f;
 
     /// <summary>
     /// Gets, sets fixed width on zooming
@@ -501,10 +497,6 @@ public static class Config
     /// </summary>
     public static string ColorProfile { get; set; } = nameof(ColorProfileOption.CurrentMonitorProfile);
 
-    /// <summary>
-    /// Gets, sets the last time to check for update. Set it to <c>0</c> to disable auto-update.
-    /// </summary>
-    public static string AutoUpdate { get; set; } = DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)).ToISO8601String();
 
     /// <summary>
     /// Gets, sets the absolute file path of the last seen image
@@ -640,7 +632,7 @@ public static class Config
     /// <summary>
     /// Gets, sets the interpolation mode to render the viewing image when the zoom factor is <c>greater than 100%</c>.
     /// </summary>
-    public static ImageInterpolation ImageInterpolationScaleUp { get; set; } = ImageInterpolation.NearestNeighbor;
+    public static ImageInterpolation ImageInterpolationScaleUp { get; set; } = ImageInterpolation.HighQualityBicubic;
 
     /// <summary>
     /// Gets, sets value indicates what happens after clicking Edit menu
@@ -724,7 +716,6 @@ public static class Config
         ShowSaveOverrideConfirmation = items.GetValueEx(nameof(ShowSaveOverrideConfirmation), ShowSaveOverrideConfirmation);
         ShouldPreserveModifiedDate = items.GetValueEx(nameof(ShouldPreserveModifiedDate), ShouldPreserveModifiedDate);
         OpenSaveAsDialogInTheCurrentImageDir = items.GetValueEx(nameof(OpenSaveAsDialogInTheCurrentImageDir), OpenSaveAsDialogInTheCurrentImageDir);
-        ShowNewVersionIndicator = items.GetValueEx(nameof(ShowNewVersionIndicator), ShowNewVersionIndicator);
         EnableCenterToolbar = items.GetValueEx(nameof(EnableCenterToolbar), EnableCenterToolbar);
         ShouldOpenLastSeenImage = items.GetValueEx(nameof(ShouldOpenLastSeenImage), ShouldOpenLastSeenImage);
         ShouldUseColorProfileForAll = items.GetValueEx(nameof(ShouldUseColorProfileForAll), ShouldUseColorProfileForAll);
@@ -794,11 +785,11 @@ public static class Config
         MinDimensionToUseWIC = items.GetValueEx(nameof(MinDimensionToUseWIC), MinDimensionToUseWIC);
         MinDimensionToUseWIC = Math.Max(0, MinDimensionToUseWIC);
 
-        ImageBoosterCacheCount = items.GetValueEx(nameof(ImageBoosterCacheCount), ImageBoosterCacheCount);
-        ImageBoosterCacheCount = Math.Max(0, Math.Min(ImageBoosterCacheCount, 10));
+        NeighbourPreloadCount = items.GetValueEx(nameof(NeighbourPreloadCount), NeighbourPreloadCount);
+        NeighbourPreloadCount = Math.Max(0, Math.Min(NeighbourPreloadCount, 10));
 
-        ImageBoosterCacheMaxDimension = items.GetValueEx(nameof(ImageBoosterCacheMaxDimension), ImageBoosterCacheMaxDimension);
-        ImageBoosterCacheMaxFileSizeInMb = items.GetValueEx(nameof(ImageBoosterCacheMaxFileSizeInMb), ImageBoosterCacheMaxFileSizeInMb);
+        NeighbourPreloadMaxDimension = items.GetValueEx(nameof(NeighbourPreloadMaxDimension), NeighbourPreloadMaxDimension);
+        NeighbourPreloadMaxFileSizeInMb = items.GetValueEx(nameof(NeighbourPreloadMaxFileSizeInMb), NeighbourPreloadMaxFileSizeInMb);
 
         ZoomLockValue = items.GetValueEx(nameof(ZoomLockValue), ZoomLockValue);
         if (ZoomLockValue < 0) ZoomLockValue = 100f;
@@ -834,7 +825,6 @@ public static class Config
         ColorProfile = items.GetValueEx(nameof(ColorProfile), ColorProfile);
         ColorProfile = BHelper.GetCorrectColorProfileName(ColorProfile);
 
-        AutoUpdate = items.GetValueEx(nameof(AutoUpdate), AutoUpdate);
         LastSeenImagePath = items.GetValueEx(nameof(LastSeenImagePath), LastSeenImagePath);
         LastOpenedSetting = items.GetValueEx(nameof(LastOpenedSetting), LastOpenedSetting);
         DarkTheme = items.GetValueEx(nameof(DarkTheme), DarkTheme);
@@ -1097,7 +1087,6 @@ public static class Config
         _ = settings.TryAdd(nameof(ShowSaveOverrideConfirmation), ShowSaveOverrideConfirmation);
         _ = settings.TryAdd(nameof(ShouldPreserveModifiedDate), ShouldPreserveModifiedDate);
         _ = settings.TryAdd(nameof(OpenSaveAsDialogInTheCurrentImageDir), OpenSaveAsDialogInTheCurrentImageDir);
-        _ = settings.TryAdd(nameof(ShowNewVersionIndicator), ShowNewVersionIndicator);
         _ = settings.TryAdd(nameof(EnableCenterToolbar), EnableCenterToolbar);
         _ = settings.TryAdd(nameof(ShouldOpenLastSeenImage), ShouldOpenLastSeenImage);
         _ = settings.TryAdd(nameof(ShouldUseColorProfileForAll), ShouldUseColorProfileForAll);
@@ -1149,10 +1138,10 @@ public static class Config
         _ = settings.TryAdd(nameof(ThumbnailSize), ThumbnailSize);
         _ = settings.TryAdd(nameof(GalleryCacheSizeInMb), GalleryCacheSizeInMb);
         _ = settings.TryAdd(nameof(GalleryColumns), GalleryColumns);
-        _ = settings.TryAdd(nameof(ImageBoosterCacheCount), ImageBoosterCacheCount);
+        _ = settings.TryAdd(nameof(NeighbourPreloadCount), NeighbourPreloadCount);
         _ = settings.TryAdd(nameof(MinDimensionToUseWIC), MinDimensionToUseWIC);
-        _ = settings.TryAdd(nameof(ImageBoosterCacheMaxDimension), ImageBoosterCacheMaxDimension);
-        _ = settings.TryAdd(nameof(ImageBoosterCacheMaxFileSizeInMb), ImageBoosterCacheMaxFileSizeInMb);
+        _ = settings.TryAdd(nameof(NeighbourPreloadMaxDimension), NeighbourPreloadMaxDimension);
+        _ = settings.TryAdd(nameof(NeighbourPreloadMaxFileSizeInMb), NeighbourPreloadMaxFileSizeInMb);
         _ = settings.TryAdd(nameof(ZoomLockValue), ZoomLockValue);
         _ = settings.TryAdd(nameof(ToolbarIconHeight), ToolbarIconHeight);
         _ = settings.TryAdd(nameof(ImageEditQuality), ImageEditQuality);
@@ -1181,7 +1170,6 @@ public static class Config
         #region String items
 
         _ = settings.TryAdd(nameof(ColorProfile), ColorProfile);
-        _ = settings.TryAdd(nameof(AutoUpdate), AutoUpdate);
         _ = settings.TryAdd(nameof(LastSeenImagePath), LastSeenImagePath);
         _ = settings.TryAdd(nameof(LastOpenedSetting), LastOpenedSetting);
         _ = settings.TryAdd(nameof(DarkTheme), DarkTheme);

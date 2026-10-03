@@ -752,6 +752,7 @@ public partial class FrmMain : ThemedForm
         {
             Local.CurrentIndex = -1;
             Local.Metadata = null;
+            PicMain.SetImage(null);
             LoadImageInfo();
             return;
         }
@@ -855,6 +856,9 @@ public partial class FrmMain : ThemedForm
                     imageIndex = Local.Images.Length - 1;
 
 
+                // Validate the snapshot entry even when its bitmap is already cached.
+                imageIndex = ResolveExistingImageIndex(imageIndex, step < 0 ? -1 : 1);
+                if (imageIndex < 0) return;
                 // Update current index
                 Local.CurrentIndex = imageIndex;
             }
@@ -977,6 +981,9 @@ public partial class FrmMain : ThemedForm
             tokenSrc?.Token.ThrowIfCancellationRequested();
 
 
+            if (shouldUpdateIndex && photo?.Error != null && IsMissingImageFile(imgFilePath))
+                throw new FileNotFoundException("The snapshot entry disappeared.", imgFilePath);
+
             _uiReporter.Report(new(new ImageLoadedEventArgs()
             {
                 Index = imageIndex,
@@ -999,6 +1006,16 @@ public partial class FrmMain : ThemedForm
                         Photo = photo,
                     }));
                 });
+        }
+        catch (Exception) when (shouldUpdateIndex && IsMissingImageFile(Local.Images.GetFilePath(imageIndex)))
+        {
+            // A file can disappear between validation and metadata/decode.
+            var nextIndex = ResolveExistingImageIndex(imageIndex, step < 0 ? -1 : 1);
+            if (nextIndex >= 0)
+            {
+                Local.CurrentIndex = nextIndex;
+                await ViewNextAsync(0, resetZoom, isSkipCache, frameIndex, null, tokenSrc);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -1248,8 +1265,6 @@ public partial class FrmMain : ThemedForm
             _pendingSwitchDirMessage = null;
         }
 
-        // Collect system garbage
-        Local.GcCollect();
     }
 
 
@@ -1917,17 +1932,6 @@ public partial class FrmMain : ThemedForm
     {
         try
         {
-            // Alert user if there is a new version
-            if (Config.ShowNewVersionIndicator)
-            {
-                MnuCheckForUpdate.Text = MnuCheckForUpdate.Text = Config.Language[$"{Name}.{nameof(MnuCheckForUpdate)}._NewVersion"];
-                MnuHelp.BackColor = MnuCheckForUpdate.BackColor = Color.FromArgb(35, 255, 165, 2);
-            }
-            else
-            {
-                MnuCheckForUpdate.Text = MnuCheckForUpdate.Text = Config.Language["_._CheckForUpdate"];
-                MnuHelp.BackColor = MnuCheckForUpdate.BackColor = Color.Transparent;
-            }
 
             MnuViewChannels.Enabled = true;
             MnuToggleImageAnimation.Enabled =
@@ -2565,10 +2569,7 @@ public partial class FrmMain : ThemedForm
         IG_About();
     }
 
-    private void MnuCheckForUpdate_Click(object sender, EventArgs e)
-    {
-        IG_CheckForUpdate(true);
-    }
+
 
     private void MnuReportIssue_Click(object sender, EventArgs e)
     {

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -46,7 +46,7 @@ public class Source
     /// <summary>
     /// Config file description
     /// </summary>
-    public static string Description => "ImageGlass configuration file";
+    public static string Description => "ImageCrystal configuration file";
 
 
     /// <summary>

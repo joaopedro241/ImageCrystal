@@ -1,0 +1,20 @@
+ImageCrystal is an independent modified version of ImageGlass v9.
+Upstream: https://github.com/d2phap/ImageGlass
+Base tag: 9.6.1.807
+Base commit: 1650ca9f3b8209d4a69a353f804ff6f7c42fc9de
+
+Original code copyright (C) 2010-2026 DUONG DIEU PHAP and contributors.
+ImageCrystal modifications and original crystal artwork: October 2026.
+Source-file notices and third-party notices are preserved.
+The source is distributed under GNU GPL v3; files declaring v3 or later
+retain that grant. See LICENSE and the License folder.
+
+Modified behaviour: deterministic decoder disposal; finite, cancellable
+neighbour preloading with zero as the default; removal of update code;
+event-driven deletion handling; optional folder monitoring off by default;
+missing-file snapshot navigation; independent application identifiers;
+new name and logo; portable testing defaults.
+
+This local test build has not been publicly published. Its corresponding
+source is in the accompanying upstream-v9 checkout, branch imagecrystal-test.
+Build instructions: README.ImageCrystal.md and Build-Test.ps1.

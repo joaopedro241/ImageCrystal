@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -128,7 +128,7 @@ public class IgImgData : IDisposable
                     return new AnimatedImgFrame(frame.ToBitmap(), duration);
                 });
 
-                Source = new AnimatedImg(frames, data.FrameCount);
+                Source = new AnimatedImg(frames.ToArray(), data.FrameCount);
             }
             else
             {
@@ -141,6 +141,7 @@ public class IgImgData : IDisposable
         {
             HasAlpha = true; // assume the image source has alpha
             Image = data.SingleFrameSource;
+            data.SingleFrameSource = null; // Ownership moves to the rendered image.
         }
         // single frame: ImageMagick source
         else

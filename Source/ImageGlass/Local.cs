@@ -29,14 +29,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO.Pipes;
-using System.Runtime;
 using WicNet;
 
 namespace ImageGlass;
 
 public class Local
 {
-    private static CancellationTokenSource? _gcTokenSrc;
     private static FrmSettings _frmSetting;
     private static FrmResize _frmResize;
 
@@ -486,7 +484,7 @@ public class Local
     /// <summary>
     /// Gets, sets images list
     /// </summary>
-    public static ImageBooster Images { get; set; } = new();
+    public static NeighbourImageCache Images { get; set; } = new();
 
     /// <summary>
     /// Gets, sets index of the viewing image
@@ -561,9 +559,9 @@ public class Local
         Images.Dispose();
         Images = new(list)
         {
-            MaxQueue = Config.ImageBoosterCacheCount,
-            MaxImageDimensionToCache = Config.ImageBoosterCacheMaxDimension,
-            MaxFileSizeInMbToCache = Config.ImageBoosterCacheMaxFileSizeInMb,
+            MaxQueue = Config.NeighbourPreloadCount,
+            MaxImageDimensionToCache = Config.NeighbourPreloadMaxDimension,
+            MaxFileSizeInMbToCache = Config.NeighbourPreloadMaxFileSizeInMb,
 
             DistinctDirs = distinctDirsList ?? [],
         };
@@ -792,41 +790,6 @@ public class Local
 
 
     /// <summary>
-    /// Delay calling <see cref="GC.Collect"/> for <paramref name="delayMs"/> milliseconds.
-    /// </summary>
-    public static void GcCollect(int delayMs = 500)
-    {
-        _gcTokenSrc?.Cancel();
-        _gcTokenSrc = new();
-
-        _ = GCCollectAsync(delayMs, _gcTokenSrc.Token);
-    }
-
-    private static async Task GCCollectAsync(int delayMs, CancellationToken token)
-    {
-        try
-        {
-            // check if task is cancelled
-            token.ThrowIfCancellationRequested();
-
-            await Task.Delay(delayMs, token);
-
-            // check if task is cancelled
-            token.ThrowIfCancellationRequested();
-
-            // Collect system garbage
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-    }
-
-
-    /// <summary>
     /// Parses the given JSON to ImageGlass settings and applies the changes.
     /// </summary>
     public static void ApplySettingsFromJson(string dataJson, Action<UpdateRequests>? onUpdated = null)
@@ -861,7 +824,6 @@ public class Local
         }
         _ = Config.SetFromJson(dict, nameof(Config.ShouldAutoOpenNewAddedImage));
 
-        _ = Config.SetFromJson(dict, nameof(Config.AutoUpdate));
         _ = Config.SetFromJson(dict, nameof(Config.EnableMultiInstances));
         if (Config.SetFromJson(dict, nameof(Config.ShowAppIcon)).Done)
         {
@@ -900,18 +862,18 @@ public class Local
         if (Config.SetFromJson(dict, nameof(Config.EmbeddedThumbnailMinHeight)).Done) { reloadImg = true; }
 
 
-        // Image booster
-        if (Config.SetFromJson(dict, nameof(Config.ImageBoosterCacheCount)).Done)
+        // Neighbour preloading
+        if (Config.SetFromJson(dict, nameof(Config.NeighbourPreloadCount)).Done)
         {
-            Local.Images.MaxQueue = Config.ImageBoosterCacheCount;
+            Local.Images.MaxQueue = Config.NeighbourPreloadCount;
         }
-        if (Config.SetFromJson(dict, nameof(Config.ImageBoosterCacheMaxDimension)).Done)
+        if (Config.SetFromJson(dict, nameof(Config.NeighbourPreloadMaxDimension)).Done)
         {
-            Local.Images.MaxImageDimensionToCache = Config.ImageBoosterCacheMaxDimension;
+            Local.Images.MaxImageDimensionToCache = Config.NeighbourPreloadMaxDimension;
         }
-        if (Config.SetFromJson(dict, nameof(Config.ImageBoosterCacheMaxFileSizeInMb)).Done)
+        if (Config.SetFromJson(dict, nameof(Config.NeighbourPreloadMaxFileSizeInMb)).Done)
         {
-            Local.Images.MaxFileSizeInMbToCache = Config.ImageBoosterCacheMaxFileSizeInMb;
+            Local.Images.MaxFileSizeInMbToCache = Config.NeighbourPreloadMaxFileSizeInMb;
         }
 
 

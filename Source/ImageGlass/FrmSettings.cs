@@ -285,7 +285,7 @@ public partial class FrmSettings : WebForm
         }
         else if (e.Name.Equals("Lnk_OpenDefaultAppsSetting", StringComparison.Ordinal))
         {
-            _ = BHelper.OpenUrlAsync("ms-settings:defaultapps?registeredAppUser=ImageGlass");
+            _ = BHelper.OpenUrlAsync("ms-settings:defaultapps?registeredAppUser=ImageCrystal");
         }
         else if (e.Name.Equals("Btn_ResetFileFormats", StringComparison.Ordinal))
         {
