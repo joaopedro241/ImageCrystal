@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -79,15 +80,7 @@ public partial class FrmAbout : WebForm
     {
         await base.OnWeb2MessageReceivedAsync(e);
 
-        if (e.Name.Equals("BtnImageGlassStore", StringComparison.OrdinalIgnoreCase))
-        {
-            BHelper.OpenImageGlassMsStore();
-        }
-        else if (e.Name.Equals("BtnDonate", StringComparison.OrdinalIgnoreCase))
-        {
-            _ = BHelper.OpenUrlAsync("https://imageglass.org/support#donation", "from_about_donate");
-        }
-        else if (e.Name.Equals("BtnClose", StringComparison.OrdinalIgnoreCase))
+        if (e.Name.Equals("BtnClose", StringComparison.OrdinalIgnoreCase))
         {
             Close();
         }

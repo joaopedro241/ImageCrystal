@@ -1,20 +1,32 @@
-ImageCrystal is an independent modified version of ImageGlass v9.
+ImageCrystal 9.7.0
+Independent Windows continuation of ImageGlass v9
+
 Upstream: https://github.com/d2phap/ImageGlass
 Base tag: 9.6.1.807
 Base commit: 1650ca9f3b8209d4a69a353f804ff6f7c42fc9de
+ImageCrystal: https://github.com/joaopedro241/ImageCrystal
 
-Original code copyright (C) 2010-2026 DUONG DIEU PHAP and contributors.
-ImageCrystal modifications and original crystal artwork: October 2026.
-Source-file notices and third-party notices are preserved.
-The source is distributed under GNU GPL v3; files declaring v3 or later
-retain that grant. See LICENSE and the License folder.
+Original ImageGlass code copyright (C) 2010-2026 DUONG DIEU PHAP
+and the respective contributors. Original notices are retained.
+ImageCrystal modifications and original crystal artwork: 2026, xenon.
+These modifications were made in October 2026; see CHANGELOG.md
+and the source history for details.
 
-Modified behaviour: deterministic decoder disposal; finite, cancellable
-neighbour preloading with zero as the default; removal of update code;
-event-driven deletion handling; optional folder monitoring off by default;
-missing-file snapshot navigation; independent application identifiers;
-new name and logo; portable testing defaults.
+ImageCrystal is distributed under GNU General Public License version 3.
+Existing per-file grants allowing version 3 or later are preserved.
+New original ImageCrystal code and artwork use GPL-3.0-or-later.
+Dependencies retain their licenses; see THIRD-PARTY-NOTICES.md
+and License/. There is no warranty; see LICENSE.
 
-This local test build has not been publicly published. Its corresponding
-source is in the accompanying upstream-v9 checkout, branch imagecrystal-test.
-Build instructions: README.ImageCrystal.md and Build-Test.ps1.
+The unmodified upstream licensing document is preserved as
+"docs/upstream/LICENSE" in source and "License/ImageGlass-upstream.txt"
+in portable packages. Historical agreements under docs/upstream/
+are reference records, not new ImageCrystal contribution terms.
+
+ImageGlass's name and original logo are not ImageCrystal branding.
+This is an independent fork, not an official ImageGlass release or
+endorsed by its original author. Version 9.7 is ImageCrystal's version.
+
+Distribute the corresponding modified source and build instructions
+with binaries through the same release location, tied to the exact
+release commit/tag. See docs/RELEASING.md.

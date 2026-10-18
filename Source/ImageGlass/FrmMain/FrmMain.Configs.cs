@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -203,14 +204,6 @@ public partial class FrmMain
         SizeChanged += FrmMainConfig_SizeChanged;
 
 
-        // run Startup Boost mode
-        if (Program.IsStartupBoostMode)
-        {
-            Config.FrmMainPositionX = -9999;
-            Config.FrmMainPositionY = -9999;
-            Config.FrmMainState = FormWindowState.Normal;
-            ShowInTaskbar = false;
-        }
     }
 
 
@@ -242,6 +235,7 @@ public partial class FrmMain
 
     private void FrmMain_Load(object sender, EventArgs e)
     {
+        ImageGlass.Base.Diagnostics.MemoryProbe.Capture("ui.before-first-image");
         Local.FrmMainUpdateRequested += Local_FrmMainUpdateRequestedAsync;
 
 
@@ -268,14 +262,14 @@ public partial class FrmMain
             // load window placement from settings here to save the initial
             // position of window so that when user exists the fullscreen mode,
             // it can be restore correctly
-            WindowSettings.LoadFrmMainPlacementFromConfig(this, autoCorrectBounds: !Program.IsStartupBoostMode);
+            WindowSettings.LoadFrmMainPlacementFromConfig(this, autoCorrectBounds: true);
 
             IG_ToggleFullScreen(true);
         }
         else
         {
             // load window placement from settings
-            WindowSettings.LoadFrmMainPlacementFromConfig(this, autoCorrectBounds: !Program.IsStartupBoostMode);
+            WindowSettings.LoadFrmMainPlacementFromConfig(this, autoCorrectBounds: true);
 
             // toggle frameless window
             IG_ToggleFrameless(Config.EnableFrameless, false);
@@ -285,26 +279,14 @@ public partial class FrmMain
         }
 
 
-        // run Startup Boost mode
-        if (Program.IsStartupBoostMode)
+        // start slideshow
+        if (Config.EnableSlideshow)
         {
-            Task.Run(async () =>
-            {
-                await Task.Delay(3000);
-                IG_Exit();
-            });
+            IG_ToggleSlideshow();
         }
-        else
-        {
-            // start slideshow
-            if (Config.EnableSlideshow)
-            {
-                IG_ToggleSlideshow();
-            }
 
-            // load first image
-            LoadImagesFromCmdArgs(Program.Args);
-        }
+        // load first image
+        LoadImagesFromCmdArgs(Program.Args);
 
 
         // load other low priority data after 500ms
@@ -349,10 +331,6 @@ public partial class FrmMain
 
     private void FrmMainConfig_FormClosing(object? sender, FormClosingEventArgs e)
     {
-        // immediately exit
-        if (Program.IsStartupBoostMode) return;
-
-
         // save settings
         _ = SaveConfigsOnClosing();
     }

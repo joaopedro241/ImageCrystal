@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -18,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Cysharp.Text;
 using ImageGlass.Base;
+using ImageGlass.Base.Diagnostics;
 using ImageGlass.Base.Actions;
 using ImageGlass.Base.FileSystem;
 using ImageGlass.Base.PhotoBox;
@@ -58,8 +60,10 @@ public partial class FrmMain : ThemedForm
 
     public FrmMain() : base()
     {
+        using var memoryPhase = MemoryProbe.Begin("ui.construct");
         InitializeComponent();
         InitializeToolbarContext();
+        Disposed += (_, _) => SetOwnedDisplayedPhoto(null);
 
         // initialize UI thread reporter
         _uiReporter = new Progress<ProgressReporterEventArgs>(ReportToUIThread);
@@ -699,6 +703,7 @@ public partial class FrmMain : ThemedForm
         }
 
         Gallery.SuspendLayout();
+        using var memoryPhase = MemoryProbe.Begin("gallery.load-filenames");
         Gallery.Items.Clear();
 
         Gallery.Items.AddRange(Local.Images.FilePaths.ToArray());
@@ -707,6 +712,27 @@ public partial class FrmMain : ThemedForm
         UpdateGallerySize();
 
         SelectCurrentGalleryThumbnail();
+        CaptureMemoryState();
+    }
+
+    private void CaptureMemoryState()
+    {
+        if (!MemoryProbe.Enabled || IsDisposed || Disposing) return;
+        if (InvokeRequired)
+        {
+            if (IsHandleCreated) BeginInvoke(new Action(CaptureMemoryState));
+            return;
+        }
+        MemoryProbe.Capture("ui.image-and-cache-state", new
+        {
+            filename = Local.Images.GetFilePath(Local.CurrentIndex),
+            folderEntries = Local.Images.Length,
+            fullImagesCached = Enumerable.Range(0, Local.Images.Length).Count(Local.Images.IsCached),
+            neighbourPreloadCount = Config.NeighbourPreloadCount,
+            galleryVisible = Gallery.Visible,
+            gallery = Gallery.GetMemoryDiagnosticSnapshot(),
+            PicMain.SourceWidth, PicMain.SourceHeight,
+        });
     }
 
 
@@ -753,6 +779,7 @@ public partial class FrmMain : ThemedForm
             Local.CurrentIndex = -1;
             Local.Metadata = null;
             PicMain.SetImage(null);
+            SetOwnedDisplayedPhoto(null);
             LoadImageInfo();
             return;
         }
@@ -904,6 +931,9 @@ public partial class FrmMain : ThemedForm
             }
 
 
+
+            // The foreground metadata is also the direct photo's decode metadata.
+            if (photo != null) photo.Metadata = Local.Metadata;
 
             // image frame index
             Local.CurrentFrameIndex = Local.Metadata.FrameIndex;
@@ -1249,6 +1279,13 @@ public partial class FrmMain : ThemedForm
         }
 
 
+        // A direct open (Index == -1) is not owned by the folder cache.
+        // Release its predecessor only after SetImage has stopped using it.
+        if (error == null && (e.UseWebview2 || !(e.Data?.ImgData.IsImageNull ?? true)))
+            SetOwnedDisplayedPhoto(e.Index < 0 ? e.Data : null);
+        else if (error != null && e.Index < 0)
+            e.Data?.Dispose();
+
         // select thumbnail
         if (e.Index >= 0)
         {
@@ -1264,6 +1301,9 @@ public partial class FrmMain : ThemedForm
             PicMain.ShowMessage(_pendingSwitchDirMessage, Config.InAppMessageDuration);
             _pendingSwitchDirMessage = null;
         }
+
+        CaptureMemoryState();
+        MemoryProbe.ScheduleSettledSnapshots(CaptureMemoryState);
 
     }
 
@@ -1339,84 +1379,101 @@ public partial class FrmMain : ThemedForm
 
         if (Local.Metadata == null || !Config.ShowImagePreview) return;
         WicBitmapSource? wicSrc = null;
-
-
+        IgImgData? previewData = null;
         try
         {
-            token.ThrowIfCancellationRequested();
-
-            var isImageBigForThumbnail = Local.Metadata.RenderedWidth >= 4000
-                || Local.Metadata.RenderedHeight >= 4000;
-
-            // get embedded thumbnail for preview
-            wicSrc = PhotoCodec.GetEmbeddedThumbnail(filePath,
-                rawThumbnail: true, exifThumbnail: isImageBigForThumbnail, token: token);
-
-            // use thumbnail image for preview
-            if (wicSrc == null && isImageBigForThumbnail)
-            {
-                if (Local.CurrentIndex >= 0 && Local.CurrentIndex < Gallery.Items.Count)
-                {
-                    token.ThrowIfCancellationRequested();
-                    var thumbItem = Gallery.Items[Local.CurrentIndex];
-
-                    if (thumbItem.ThumbnailImage is Image thumb
-                        && thumbItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        wicSrc?.Dispose();
-                        wicSrc = BHelper.ToWicBitmapSource(thumb);
-                    }
-                }
-            }
-        }
-        catch (OperationCanceledException) { return; }
-        catch { }
 
 
-        if (wicSrc != null)
-        {
             try
             {
-                Size previewSize;
                 token.ThrowIfCancellationRequested();
 
-                // get preview size
-                if (Config.ZoomMode == ZoomMode.LockZoom)
-                {
-                    previewSize = new((int)Local.Metadata.RenderedWidth, (int)Local.Metadata.RenderedHeight);
-                }
-                else
-                {
-                    var zoomFactor = PicMain.CalculateZoomFactor(Config.ZoomMode, Local.Metadata.RenderedWidth, Local.Metadata.RenderedHeight);
+                var isImageBigForThumbnail = Local.Metadata.RenderedWidth >= 4000
+                    || Local.Metadata.RenderedHeight >= 4000;
 
-                    previewSize = new((int)(Local.Metadata.RenderedWidth * zoomFactor), (int)(Local.Metadata.RenderedHeight * zoomFactor));
-                }
+                // get embedded thumbnail for preview
+                wicSrc = PhotoCodec.GetEmbeddedThumbnail(filePath,
+                    rawThumbnail: true, exifThumbnail: isImageBigForThumbnail, token: token, metadata: Local.Metadata);
 
-
-                // scale the preview image
-                if (wicSrc.Width < previewSize.Width || wicSrc.Height < previewSize.Height)
+                // use thumbnail image for preview
+                if (wicSrc == null && isImageBigForThumbnail)
                 {
-                    // sync interpolation mode for the preview
-                    var interpolation = DirectN.WICBitmapInterpolationMode.WICBitmapInterpolationModeLinear;
-                    if (PicMain.ZoomFactor > 1 &&
-                        (PicMain.CurrentInterpolation == ImageInterpolation.HighQualityBicubic))
+                    if (Local.CurrentIndex >= 0 && Local.CurrentIndex < Gallery.Items.Count)
                     {
-                        interpolation = DirectN.WICBitmapInterpolationMode.WICBitmapInterpolationModeNearestNeighbor;
+                        token.ThrowIfCancellationRequested();
+                        var thumbItem = Gallery.Items[Local.CurrentIndex];
+
+                        if (thumbItem.ThumbnailImage is Image thumb
+                            && thumbItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            wicSrc?.Dispose();
+                            wicSrc = BHelper.ToWicBitmapSource(thumb);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException) { return; }
+            catch { }
+
+
+            if (wicSrc != null)
+            {
+                try
+                {
+                    Size previewSize;
+                    token.ThrowIfCancellationRequested();
+
+                    // get preview size
+                    if (Config.ZoomMode == ZoomMode.LockZoom)
+                    {
+                        previewSize = new((int)Local.Metadata.RenderedWidth, (int)Local.Metadata.RenderedHeight);
+                    }
+                    else
+                    {
+                        var zoomFactor = PicMain.CalculateZoomFactor(Config.ZoomMode, Local.Metadata.RenderedWidth, Local.Metadata.RenderedHeight);
+
+                        previewSize = new((int)(Local.Metadata.RenderedWidth * zoomFactor), (int)(Local.Metadata.RenderedHeight * zoomFactor));
+                    }
+
+
+                    // scale the preview image
+                    if (wicSrc.Width < previewSize.Width || wicSrc.Height < previewSize.Height)
+                    {
+                        // sync interpolation mode for the preview
+                        var interpolation = DirectN.WICBitmapInterpolationMode.WICBitmapInterpolationModeLinear;
+                        if (PicMain.ZoomFactor > 1 &&
+                            (PicMain.CurrentInterpolation == ImageInterpolation.HighQualityBicubic))
+                        {
+                            interpolation = DirectN.WICBitmapInterpolationMode.WICBitmapInterpolationModeNearestNeighbor;
+                        }
+
+                        token.ThrowIfCancellationRequested();
+                        wicSrc.Scale(previewSize.Width, previewSize.Height, interpolation);
                     }
 
                     token.ThrowIfCancellationRequested();
-                    wicSrc.Scale(previewSize.Width, previewSize.Height, interpolation);
+                    previewData = new()
+                    {
+                        Image = wicSrc,
+                        CanAnimate = false,
+                        FrameCount = 1,
+                    };
+                    PicMain.SetImage(previewData, isForPreview: true, channels: Local.ImageChannels);
+                    // The viewer now owns the preview until replacement/unload.
+                    previewData = null;
+                    wicSrc = null;
                 }
-
-                token.ThrowIfCancellationRequested();
-                PicMain.SetImage(new()
-                {
-                    Image = wicSrc,
-                    CanAnimate = false,
-                    FrameCount = 1,
-                }, isForPreview: true, channels: Local.ImageChannels);
+                catch (OperationCanceledException) { }
             }
-            catch (OperationCanceledException) { }
+        }
+        finally
+        {
+            if (previewData != null)
+            {
+                PicMain.DisposeImageResources();
+                previewData.Dispose();
+            }
+            wicSrc?.Dispose();
         }
     }
 

@@ -1,13 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: ⭐ Request for Paid Support
-    url: https://imageglass.org/support#premium-support
-    about: Unlock premium assistance directly from the creator of ImageGlass.
-
-  - name: 🤔 Ask a Question
-    url: https://github.com/d2phap/ImageGlass/discussions/new/choose
-    about: Ask a question about ImageGlass features.
-    
-  - name: 🦜 Ask Discord Community
-    url: https://discord.gg/tWjbynH2X8
-    about: Join in official Discord server of ImageGlass.
+  - name: ImageCrystal documentation
+    url: https://github.com/joaopedro241/ImageCrystal#readme
+    about: Read the fork's behavior, requirements and known limitations first.

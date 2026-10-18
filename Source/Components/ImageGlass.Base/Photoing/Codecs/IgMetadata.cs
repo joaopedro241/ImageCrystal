@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -16,11 +17,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageMagick;
+
 namespace ImageGlass.Base.Photoing.Codecs;
 
 
 public class IgMetadata
 {
+    // Header facts only: no retained profile or preview pixel buffers.
+    internal bool HeaderReadSucceeded { get; set; }
+    internal bool HeaderHasExifProfile { get; set; }
+    internal bool HeaderHasRawThumbnail { get; set; }
+    internal MagickFormat DetectedFormat { get; set; }
+
     // File metadata
     public string FilePath { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;

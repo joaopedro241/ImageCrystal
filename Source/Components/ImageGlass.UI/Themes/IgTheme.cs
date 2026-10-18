@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -40,8 +41,6 @@ public class IgTheme : IDisposable
             Settings.Dispose();
             ToolbarIcons.Dispose();
 
-            _defaultIcon?.Dispose();
-            _defaultIcon = null;
         }
 
         // Free any unmanaged objects here.
@@ -62,7 +61,6 @@ public class IgTheme : IDisposable
     #endregion
 
 
-    private Bitmap? _defaultIcon = null;
 
 
     /// <summary>
@@ -379,13 +377,17 @@ public class IgTheme : IDisposable
     /// Theme pack's icon name or image file path.
     /// Example: <c>OpenFile</c>, or <c>.\Themes\Kobe\OpenFile.svg</c>
     /// </param>
-    public async Task<Bitmap> GetToolbarIconAsync(string? name, uint iconHeight)
+    public async Task<Bitmap?> GetToolbarIconAsync(string? name, uint iconHeight)
+        => (await LoadToolbarIconAsync(name, iconHeight)).Image;
+
+    // The toolbar owns rendered icons; explicitly supplied theme bitmaps are borrowed.
+    internal async Task<(Bitmap? Image, bool OwnsImage)> LoadToolbarIconAsync(string? name, uint iconHeight)
     {
-        if (string.IsNullOrEmpty(name)) return null;
+        if (string.IsNullOrEmpty(name)) return (null, false);
 
         // get icon from theme pack icon name
         var icon = ToolbarIcons.GetType().GetProperty(name ?? string.Empty)?.GetValue(ToolbarIcons);
-        if (icon != null) return icon as Bitmap;
+        if (icon != null) return (icon as Bitmap, false);
 
 
         // load icon from custom file
@@ -401,11 +403,10 @@ public class IgTheme : IDisposable
         catch
         {
             // set empty icon
-            _defaultIcon ??= BHelper.CreateDefaultToolbarIcon(iconHeight, Settings.IsDarkMode);
-            icon = _defaultIcon;
+            icon = BHelper.CreateDefaultToolbarIcon(iconHeight, Settings.IsDarkMode);
         }
 
-        return icon as Bitmap;
+        return (icon as Bitmap, true);
     }
 
 
@@ -416,7 +417,7 @@ public class IgTheme : IDisposable
     /// Theme pack's icon name or image file path.
     /// Example: <c>OpenFile</c>, or <c>.\Themes\Kobe\OpenFile.svg</c>
     /// </param>
-    public Bitmap GetToolbarIcon(string? name, uint iconHeight)
+    public Bitmap? GetToolbarIcon(string? name, uint iconHeight)
     {
         return BHelper.RunSync(() => GetToolbarIconAsync(name, iconHeight));
     }

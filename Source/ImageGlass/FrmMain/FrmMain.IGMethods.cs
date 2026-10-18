@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -141,6 +142,7 @@ public partial class FrmMain
         else
         {
             PicMain.SetImage(null);
+            SetOwnedDisplayedPhoto(null);
             PicMain.ClearMessage();
 
             Local.Images.Unload(Local.CurrentIndex);
@@ -829,7 +831,7 @@ public partial class FrmMain
     /// </summary>
     public static void IG_ReportIssue()
     {
-        _ = BHelper.OpenUrlAsync("https://github.com/d2phap/ImageGlass/issues?q=is%3Aissue+label%3Av9+", "from_report_issue");
+        _ = BHelper.OpenUrlAsync("https://github.com/joaopedro241/ImageCrystal/issues", "from_report_issue");
     }
 
 
@@ -877,10 +879,7 @@ public partial class FrmMain
 
 
         // footer buttons
-        var btnDonate = new TaskDialogButton(Config.Language[$"{langPath}._Donate"], allowCloseDialog: false);
         var btnClose = new TaskDialogButton(Config.Language["_._Close"], allowCloseDialog: true);
-
-        btnDonate.Click += async (_, _) => await BHelper.OpenUrlAsync("https://imageglass.org/support", "from_about_donate");
 
         // WebView2 warning
         var webview2Warning = "";
@@ -897,7 +896,7 @@ public partial class FrmMain
         var page = new TaskDialogPage()
         {
             Icon = new TaskDialogIcon(this.Icon),
-            Buttons = [btnDonate, btnClose],
+            Buttons = [btnClose],
             SizeToContent = true,
             AllowCancel = true,
             EnableLinks = true,
@@ -913,21 +912,23 @@ public partial class FrmMain
                 $"WebView2 Runtime: {Web2.Webview2Version}\r\n\r\n" +
 
                 $"{Config.Language[$"{langPath}._Thanks"]}\r\n" +
-                    $"◾ {Config.Language[$"{langPath}._LogoDesigner"]} Nguyễn Quốc Tuấn.\r\n" +
+                    $"◾ ImageCrystal maintainer: xenon.\r\n" +
+                    $"◾ Original author: Duong Dieu Phap (ImageGlass 9.6.1.807), with its contributors.\r\n" +
+                    $"◾ Original ImageGlass artwork: Nguyễn Quốc Tuấn.\r\n" +
                     $"◾ {Config.Language[$"{langPath}._Collaborator"]} Kevin Routley (<a href=\"https://github.com/fire-eggs\">https://github.com/fire-eggs</a>).\r\n" +
                     $"\r\n" +
 
                     $"{Config.Language[$"{langPath}._Contact"]}\r\n" +
-                    $"◾ {Config.Language[$"{langPath}._Homepage"]} <a href=\"https://imageglass.org\">https://imageglass.org</a>\r\n" +
-                    $"◾ GitHub: <a href=\"https://github.com/d2phap/ImageGlass\">https://github.com/d2phap/ImageGlass</a>\r\n" +
-                    $"◾ {Config.Language[$"{langPath}._Email"]} phap@imageglass.org",
+                    $"◾ GitHub: <a href=\"https://github.com/joaopedro241/ImageCrystal\">ImageCrystal</a>\r\n" +
+                    $"◾ Download: <a href=\"https://github.com/joaopedro241/ImageCrystal/releases\">ImageCrystal releases</a>\r\n" +
+                    $"◾ Upstream: <a href=\"https://github.com/d2phap/ImageGlass\">ImageGlass</a>",
 
             Footnote = new()
             {
                 Icon = TaskDialogIcon.Warning,
                 Text = $"{webview2Warning}\r\n\r\n" +
-                    $"{Config.Language[$"{langPath}._License"]}: <a href=\"https://imageglass.org/license\">https://imageglass.org/license</a>\r\n" +
-                    $"Copyright © 2010-{DateTime.Now.Year} by Dương Diệu Pháp. All rights reserved.",
+                    $"{Config.Language[$"{langPath}._License"]}: GNU GPL v3; see LICENSE.txt and NOTICE.ImageCrystal.txt.\r\n" +
+                    $"ImageCrystal © 2026 xenon. Original ImageGlass © 2010-{DateTime.Now.Year} Dương Diệu Pháp and contributors.",
             },
         };
 
@@ -1370,6 +1371,7 @@ public partial class FrmMain
             FrameCount = 1,
             HasAlpha = true,
         });
+        SetOwnedDisplayedPhoto(null);
         PicMain.ClearMessage();
 
         Local.ImageTransform.Clear();

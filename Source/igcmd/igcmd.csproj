@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+    <!-- ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt. -->
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -9,10 +10,11 @@
         <Platforms>x64;ARM64</Platforms>
         <CetCompat>false</CetCompat>
 
-        <AssemblyTitle>Igcmd: Command-line utility for ImageGlass</AssemblyTitle>
-        <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
-        <Company>Duong Dieu Phap</Company>
-        <Version>9.6.1.807</Version>
+        <AssemblyTitle>Igcmd: Command-line utility for ImageCrystal</AssemblyTitle>
+        <Copyright>ImageCrystal modifications © 2026 xenon; ImageGlass © 2010-2026 Duong Dieu Phap and contributors</Copyright>
+        <Company>ImageCrystal contributors</Company>
+        <Version>9.7.0</Version>
+        <AssemblyVersion>9.7.0.0</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -145,7 +146,7 @@ public class IgLang : IDictionary<string, string>
     /// </summary>
     public IgLang()
     {
-        _dict = InitDefaultLanguage().ToFrozenDictionary();
+        _dict = BrandLanguage(InitDefaultLanguage());
     }
 
 
@@ -165,8 +166,12 @@ public class IgLang : IDictionary<string, string>
             ReadFromFile(ref defaultLang);
         }
 
-        _dict = defaultLang.ToFrozenDictionary();
+        _dict = BrandLanguage(defaultLang);
     }
+
+    private static FrozenDictionary<string, string> BrandLanguage(Dictionary<string, string> items)
+        => items.ToFrozenDictionary(item => item.Key,
+            item => item.Value.Replace("ImageGlass", "ImageCrystal", StringComparison.Ordinal));
 
 
     /// <summary>
@@ -614,14 +619,6 @@ public class IgLang : IDictionary<string, string>
             { "FrmSettings._ShowWelcomeImage", "Show welcome image" },
             { "FrmSettings._ShouldOpenLastSeenImage", "Open the last seen image" },
 
-            { "FrmSettings._StartupBoost", "Startup Boost" }, // v9.1
-            { "FrmSettings._StartupBoost._Description", "Preload and run ImageGlass in the background for a few seconds during Windows startup to accelerate the first launch." }, // v9.1
-            { "FrmSettings._StartupBoost._Enabled", "Startup Boost is enabled" }, // v9.1
-            { "FrmSettings._StartupBoost._Disabled", "Startup Boost is disabled" }, // v9.1
-            { "FrmSettings._StartupBoost._Error", "Could not change Startup Boost setting" }, // v9.1
-            { "FrmSettings._EnableStartupBoost", "Enable Startup Boost" }, // v9.1
-            { "FrmSettings._DisableStartupBoost", "Disable Startup Boost" }, // v9.1
-            { "FrmSettings._OpenStartupAppsSetting", "Open Startup apps setting" }, // v9.1
 
             // General > Real-time update
             { "FrmSettings._RealTimeFileUpdate", "Real-time file update" },

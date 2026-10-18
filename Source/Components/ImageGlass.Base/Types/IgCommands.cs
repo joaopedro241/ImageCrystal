@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -25,7 +26,6 @@ public static class IgCommands
     public static string SHOW_UI => "--ui";
     public static string HIDE_ADMIN_REQUIRED_ERROR_UI => "--hide-admin-error-ui";
     public static string PER_MACHINE => "--per-machine";
-    public static string STARTUP_BOOST => "--startup-boost";
 
 
     // igcmd.exe
@@ -36,8 +36,6 @@ public static class IgCommands
     public static string START_SLIDESHOW => "start-slideshow";
     public static string EXPORT_FRAMES => "export-frames";
     public static string LOSSLESS_COMPRESS => "lossless-compress";
-    public static string SET_STARTUP_BOOST => "set-startup-boost";
-    public static string REMOVE_STARTUP_BOOST => "remove-startup-boost";
 
 
     public static string QUICK_SETUP => "quick-setup";

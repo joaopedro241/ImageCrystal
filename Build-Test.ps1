@@ -1,7 +1,8 @@
-param([switch]$SkipRestore, [switch]$SkipTests)
+# ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+param([switch]$SkipRestore, [switch]$SkipTests, [string]$OutputDirectory = 'artifacts\ImageCrystal-dev')
 $ErrorActionPreference = 'Stop'
 $repoPath = $PSScriptRoot
-$outputPath = Join-Path $repoPath 'artifacts\ImageCrystal-test'
+$outputPath = if ([IO.Path]::IsPathRooted($OutputDirectory)) { $OutputDirectory } else { Join-Path $repoPath $OutputDirectory }
 $webPath = Join-Path $repoPath 'Source\Components\ImageGlass.Settings\WebUI'
 $vswherePath = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 $msbuildPath = & $vswherePath -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
@@ -27,7 +28,7 @@ try {
         npm run build
         CheckExit 'Web UI build'
     } finally { Pop-Location }
-    & $msbuildPath Source/ImageGlass.slnx /t:Publish /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:SelfContained=true "/p:PublishDir=$outputPath\" /m /v:minimal /nologo
+    & $msbuildPath Source/ImageGlass/ImageGlass.csproj /t:Publish /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:SelfContained=true "/p:PublishDir=$outputPath\" /m /v:minimal /nologo
     CheckExit 'Portable build'
     New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $repoPath 'Setup\Assets\Themes') -Destination $outputPath -Recurse -Force
@@ -35,21 +36,21 @@ try {
     New-Item -ItemType Directory -Path $webOutputPath -Force | Out-Null
     Copy-Item -Path (Join-Path $webPath 'dist\*') -Destination $webOutputPath -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'Setup\Assets\default.webp') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Source\ImageGlass\License') -Destination $outputPath -Recurse -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Source\ImageGlass\Icons') -Destination $outputPath -Recurse -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Setup\Assets\Language') -Destination $outputPath -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'LICENSE') -Destination (Join-Path $outputPath 'LICENSE.txt') -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'TESTING.md') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'MEMORY-DIAGNOSTICS.md') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Start-Memory-Diagnostics.ps1') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Start-Memory-Diagnostics.cmd') -Destination $outputPath -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'NOTICE.ImageCrystal.txt') -Destination $outputPath -Force
-    # Only default settings are rewritten. Existing portable user preferences are preserved.
-    @{
-        _Metadata = @{ Description = 'ImageCrystal portable test defaults'; Version = 9.4 }
-        QuickSetupVersion = 9
-        NeighbourPreloadCount = 0
-        EnableRealTimeFileUpdate = $false
-        ShowGallery = $false
-        ColorProfile = 'CurrentMonitorProfile'
-        ImageInterpolationScaleUp = 'HighQualityBicubic'
-        ImageInterpolationScaleDown = 'HighQualityBicubic'
-        EnableMultiInstances = $true
-    } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $outputPath 'igconfig.default.json') -Encoding utf8
+    Copy-Item -LiteralPath (Join-Path $repoPath 'THIRD-PARTY-NOTICES.md') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'docs\PRIVACY.md') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'docs\upstream\LICENSE') -Destination (Join-Path $outputPath 'License\ImageGlass-upstream.txt') -Force
+    # The tracked template is the single source of portable defaults.
+    # Existing user preferences are preserved; schema version is not app version.
+    Copy-Item -LiteralPath (Join-Path $repoPath 'Setup\Settings\igconfig.default.json') -Destination $outputPath -Force
     if (!$SkipTests) {
         dotnet build tests/SmokeTests/SmokeTests.csproj -c Release -p:AppBuild="$outputPath"
         CheckExit 'Smoke test build'

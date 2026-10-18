@@ -1,13 +1,9 @@
-# Security Policy
+# Security
 
-## Supported Versions
+The current ImageCrystal release line is 9.7.x. This independent project does not support upstream ImageGlass installations or promise an enterprise support period.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+For suspected vulnerabilities, use this repository's **Security > Report a vulnerability** option when available. Do not publish exploit details or private images in an ordinary issue. If private reporting is unavailable, request a private contact without revealing vulnerability details.
 
-| Version | Supported |
-| ------- | --------- |
-| 9.x | ✅ |
-| > [8.12](https://github.com/d2phap/ImageGlass/releases/tag/8.12.4.30) | ✅ Paid Support only |
-| ≤ [8.12](https://github.com/d2phap/ImageGlass/releases/tag/8.12.4.30) | ❌ |
+ImageCrystal uses native third-party image decoders. Keep the app, Windows and dependencies updated. Updater checks are intentionally absent: releases are installed manually.
 
+Use the bug template for ordinary crashes and format failures. Provide safe redistributable samples. Diagnostic logs can contain full image paths; review them before sharing.

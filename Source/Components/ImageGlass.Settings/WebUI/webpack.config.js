@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 
 const path = require('path');
 const ESLintPlugin = require('eslint-webpack-plugin');

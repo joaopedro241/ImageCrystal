@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -30,6 +31,29 @@ public class ModernToolbar : ToolStrip
 {
     private ToolbarAlignment _alignment = ToolbarAlignment.Center;
     private uint _iconHeight = Const.TOOLBAR_ICON_HEIGHT;
+    private readonly SemaphoreSlim _iconUpdateGate = new(1, 1);
+    private readonly Dictionary<ToolStripButton, ToolbarIconState> _buttonIcons = [];
+    private bool _disposingIcons;
+
+    private sealed record ToolbarIconKey(IgTheme Theme, string? Name, uint Height, bool DarkMode);
+    private sealed record ToolbarIconState(ToolbarIconKey Key, Bitmap? Image, bool OwnsImage);
+
+    private ToolbarIconKey GetIconKey(ToolStripButton button)
+        => new(Theme!, (button.Tag as ToolbarItemTagModel)?.Image, IconHeight, Theme!.Settings.IsDarkMode);
+
+    private void ReleaseButtonIcon(ToolStripButton button)
+    {
+        if (!_buttonIcons.Remove(button, out var previous)) return;
+        if (ReferenceEquals(button.Image, previous.Image)) button.Image = null;
+        if (previous.OwnsImage) previous.Image?.Dispose();
+    }
+
+    private void SetButtonIcon(ToolStripButton button, ToolbarIconKey key, Bitmap? image, bool ownsImage)
+    {
+        ReleaseButtonIcon(button);
+        button.Image = image;
+        _buttonIcons[button] = new(key, image, ownsImage);
+    }
 
     private readonly ModernTooltip _tooltip = new();
     private CancellationTokenSource _tooltipTokenSrc = new();
@@ -212,6 +236,11 @@ public class ModernToolbar : ToolStrip
 
     protected override void Dispose(bool disposing)
     {
+        if (disposing)
+        {
+            _disposingIcons = true;
+            foreach (var button in _buttonIcons.Keys.ToArray()) ReleaseButtonIcon(button);
+        }
         base.Dispose(disposing);
 
         if (disposing)
@@ -566,49 +595,67 @@ public class ModernToolbar : ToolStrip
             IconHeight = iconHeight.Value;
         }
 
-        if (Theme is null) return;
+        if (Theme is null || _disposingIcons) return;
 
-        _tooltip.DarkMode = Theme.Settings.IsDarkMode;
-        SuspendLayout();
-
-        // update toolbar theme
-        BackColor = Theme.Colors.ToolbarBgColor;
-        ForeColor = Theme.Colors.ToolbarTextColor;
-        Renderer = new ModernToolbarRenderer(this);
-
-        // Overflow button and Overflow dropdown
-        UpdateOverflow();
-
-
-        // load toolbar button icons
-        await Parallel.ForAsync(0, Items.Count, async (i, _) =>
+        // Coalesce overlapping DPI/theme refreshes by rechecking the current button
+        // state after the preceding refresh. No old sizes or unused icons are cached.
+        await _iconUpdateGate.WaitAsync();
+        try
         {
-            if (Items[i] is ToolStripSeparator tItem)
+            if (Theme is null || _disposingIcons) return;
+
+            _tooltip.DarkMode = Theme.Settings.IsDarkMode;
+            SuspendLayout();
+
+            // update toolbar theme
+            BackColor = Theme.Colors.ToolbarBgColor;
+            ForeColor = Theme.Colors.ToolbarTextColor;
+            Renderer = new ModernToolbarRenderer(this);
+
+            // Overflow button and Overflow dropdown
+            UpdateOverflow();
+
+
+            // load toolbar button icons
+            foreach (var item in Items.Cast<ToolStripItem>().ToArray())
             {
-                tItem.AutoSize = false;
-                tItem.Height = (int)IconHeight;
-                tItem.Width = (int)IconHeight / 2;
+                if (_disposingIcons) break;
+                if (!Items.Contains(item)) continue;
+                if (item is ToolStripSeparator tItem)
+                {
+                    tItem.AutoSize = false;
+                    tItem.Height = (int)IconHeight;
+                    tItem.Width = (int)IconHeight / 2;
+                }
+
+                if (item is ToolStripButton bItem)
+                {
+                    // update font and alignment
+                    bItem.ForeColor = Theme.Colors.ToolbarTextColor;
+                    bItem.Padding = new(DefaultGap);
+                    bItem.Margin = new(0, DefaultGap, DefaultGap / 2, DefaultGap);
+
+                    // update item from metadata
+                    var key = GetIconKey(bItem);
+                    if (_buttonIcons.TryGetValue(bItem, out var current)
+                        && current.Key == key && ReferenceEquals(bItem.Image, current.Image)) continue;
+
+                    var loaded = await key.Theme.LoadToolbarIconAsync(key.Name, key.Height);
+                    if (_disposingIcons || !Items.Contains(bItem) || key != GetIconKey(bItem))
+                    {
+                        if (loaded.OwnsImage) loaded.Image?.Dispose();
+                        continue;
+                    }
+                    SetButtonIcon(bItem, key, loaded.Image, loaded.OwnsImage);
+                }
             }
-
-            if (Items[i] is ToolStripButton bItem)
-            {
-                // update font and alignment
-                bItem.ForeColor = Theme.Colors.ToolbarTextColor;
-                bItem.Padding = new(DefaultGap);
-                bItem.Margin = new(0, DefaultGap, DefaultGap / 2, DefaultGap);
-
-                // update item from metadata
-                var tagModel = bItem.Tag as ToolbarItemTagModel;
-                bItem.Image = await Theme.GetToolbarIconAsync(tagModel?.Image, IconHeight);
-            }
-
-        });
-
-        ResumeLayout(false);
-
-
-        // update items alignment
-        UpdateAlignment();
+        }
+        finally
+        {
+            if (!_disposingIcons) ResumeLayout(false);
+            _iconUpdateGate.Release();
+        }
+        if (!_disposingIcons) UpdateAlignment();
     }
 
 
@@ -712,7 +759,6 @@ public class ModernToolbar : ToolStrip
                     OnClick = model.OnClick,
                 },
 
-                Image = Theme?.GetToolbarIcon(model.Image, IconHeight),
             };
         }
 
@@ -723,6 +769,13 @@ public class ModernToolbar : ToolStrip
 
         modifier?.Invoke(toolstripItem);
         Items.Insert(position.Value, toolstripItem);
+
+        if (toolstripItem is ToolStripButton button && Theme != null && button.Image == null)
+        {
+            var key = GetIconKey(button);
+            var loaded = BHelper.RunSync(() => key.Theme.LoadToolbarIconAsync(key.Name, key.Height));
+            SetButtonIcon(button, key, loaded.Image, loaded.OwnsImage);
+        }
 
         return ToolbarAddItemResult.Success;
     }
@@ -752,7 +805,10 @@ public class ModernToolbar : ToolStrip
     /// </summary>
     public void ClearItems()
     {
+        foreach (var button in _buttonIcons.Keys.ToArray()) ReleaseButtonIcon(button);
+        var oldItems = Items.Cast<ToolStripItem>().ToArray();
         Items.Clear();
+        foreach (var item in oldItems) item.Dispose();
         Items.Insert(0, _mainMenuButton);
     }
 

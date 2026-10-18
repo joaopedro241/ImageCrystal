@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -17,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageMagick;
+using ImageGlass.Base.Diagnostics;
 using WicNet;
 
 namespace ImageGlass.Base.Photoing.Codecs;
@@ -39,6 +41,10 @@ public class IgMagickReadData : IDisposable
 
         if (disposing)
         {
+            using var memoryPhase = MemoryProbe.Begin("magick-data.dispose");
+            MemoryProbe.MarkDisposed(MultiFrameImage);
+            MemoryProbe.MarkDisposed(SingleFrameImage);
+            MemoryProbe.MarkDisposed(SingleFrameSource);
             // Free any other managed objects here.
             MultiFrameImage?.Dispose();
             SingleFrameImage?.Dispose();

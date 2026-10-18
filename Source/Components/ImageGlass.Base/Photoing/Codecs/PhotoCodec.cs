@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -17,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using DirectN;
+using ImageGlass.Base.Diagnostics;
 using ImageGlass.WebP;
 using ImageMagick;
 using ImageMagick.Formats;
@@ -42,6 +44,7 @@ public static class PhotoCodec
     /// <param name="filePath">Full path of the file</param>
     public static IgMetadata? LoadMetadata(string? filePath, CodecReadOptions? options = null)
     {
+        using var memoryPhase = MemoryProbe.Begin("metadata.load", new { filePath });
         FileInfo? fi = null;
         var meta = new IgMetadata() { FilePath = filePath ?? string.Empty };
 
@@ -96,6 +99,7 @@ public static class PhotoCodec
 
                 meta.FrameIndex = (uint)frameIndex;
                 using var imgM = imgC[frameIndex];
+                meta.DetectedFormat = imgM.Format;
 
 
                 // image size
@@ -127,9 +131,12 @@ public static class PhotoCodec
                 meta.CanAnimate = CheckAnimatedFormat(imgC, ext);
 
 
+                meta.HeaderHasRawThumbnail = imgM.GetProfile("dng:thumbnail") != null;
+
                 // EXIF profile
                 if (imgM.GetExifProfile() is IExifProfile exifProfile)
                 {
+                    meta.HeaderHasExifProfile = true;
                     // ExifRatingPercent
                     meta.ExifRatingPercent = GetExifValue(exifProfile, ExifTag.RatingPercent);
 
@@ -215,6 +222,7 @@ public static class PhotoCodec
                         meta.ColorProfile = $"{colorProfile.Description} ({meta.ColorProfile})";
                     }
                 }
+                meta.HeaderReadSucceeded = true;
             }
         }
         catch { }
@@ -231,18 +239,21 @@ public static class PhotoCodec
     /// <param name="token">Cancellation token</param>
     public static async Task<IgImgData> LoadAsync(string filePath,
         CodecReadOptions? options = null, ImgTransform? transform = null,
-        CancellationToken? token = null)
+        CancellationToken? token = null, IgMetadata? metadata = null)
     {
+        using var memoryPhase = MemoryProbe.Begin("codec.load", new { filePath });
         options ??= new();
         var cancelToken = token ?? default;
 
         try
         {
-            var (loadSuccessful, result, ext, settings) = ReadWithStream(filePath, options, transform);
+            metadata ??= LoadMetadata(filePath, options);
+            var (loadSuccessful, result, ext, settings) = ReadWithStream(filePath, options, transform, metadata);
 
             if (!loadSuccessful)
             {
-                result = await LoadWithMagickImageAsync(filePath, ext, settings, options, transform, cancelToken);
+                result.Dispose();
+                result = await LoadWithMagickImageAsync(filePath, ext, settings, options, transform, cancelToken, metadata);
             }
 
             return result;
@@ -298,9 +309,17 @@ public static class PhotoCodec
     /// <summary>
     /// Gets embedded thumbnail.
     /// </summary>
-    public static WicBitmapSource? GetEmbeddedThumbnail(string filePath, bool rawThumbnail = true, bool exifThumbnail = true, CancellationToken token = default)
+    public static WicBitmapSource? GetEmbeddedThumbnail(string filePath, bool rawThumbnail = true, bool exifThumbnail = true, CancellationToken token = default, IgMetadata? metadata = null)
     {
         if (string.IsNullOrEmpty(filePath)) return null;
+
+        if (IsReusableSingleFrameHeader(filePath, metadata)
+            && (!rawThumbnail || !metadata!.HeaderHasRawThumbnail)
+            && (!exifThumbnail || !metadata!.HeaderHasExifProfile))
+        {
+            MemoryProbe.Capture("preview.header-read-skipped");
+            return null;
+        }
 
         try
         {
@@ -328,7 +347,7 @@ public static class PhotoCodec
                 {
                     imgM.Read(thumbnailData, settings);
                     imgM.AutoOrient();
-                    result = BHelper.ToWicBitmapSource(imgM.ToBitmapSource(), imgM.HasAlpha);
+                    result = BHelper.ToWicBitmapSource(imgM);
                 }
             }
             catch (OperationCanceledException) { return null; }
@@ -351,7 +370,7 @@ public static class PhotoCodec
                 if (thumbM != null)
                 {
                     thumbM.AutoOrient();
-                    result = BHelper.ToWicBitmapSource(thumbM.ToBitmapSource(), thumbM.HasAlpha);
+                    result = BHelper.ToWicBitmapSource(thumbM);
                 }
             }
             catch (OperationCanceledException) { return null; }
@@ -367,7 +386,7 @@ public static class PhotoCodec
     /// </summary>
     public static string GetThumbnailBase64(string filePath, uint width, uint height)
     {
-        var thumbnail = GetThumbnail(filePath, width, height);
+        using var thumbnail = GetThumbnail(filePath, width, height);
 
         if (thumbnail != null)
         {
@@ -649,7 +668,7 @@ public static class PhotoCodec
                 using var imgM = imgC[0];
                 TransformImage(imgM, transform);
 
-                using var wicSrc = BHelper.ToWicBitmapSource(imgM.ToBitmapSource(), imgM.HasAlpha);
+                using var wicSrc = BHelper.ToWicBitmapSource(imgM);
                 var ext = Path.GetExtension(srcFilePath);
 
                 await SaveAsBase64Async(wicSrc, ext, destFilePath, null, token);
@@ -693,7 +712,7 @@ public static class PhotoCodec
 
 
             // for not supported formats
-            var bmp = await LoadAsync(srcFilePath, readOptions, transform, token);
+            using var bmp = await LoadAsync(srcFilePath, readOptions, transform, token);
             await SaveAsBase64Async(bmp.Image, srcExt, destFilePath, null, token);
         }
         catch (OperationCanceledException) { }
@@ -954,22 +973,18 @@ public static class PhotoCodec
                     }
                     else
                     {
-                        var ms = BHelper.ToMemoryStream(wic);
-
-                        var imgM = new MagickImage(ms);
-                        var profiles = GetProfiles(imgM);
-                        var thumbM = ProcessMagickImageAndReturnThumbnail(imgM, options, ext, true, profiles.ColorProfile, profiles.ExifProfile);
-
-                        if (thumbM != null)
+                        using (wic)
                         {
-                            imgM?.Dispose();
-                            imgM = thumbM;
+                            using var ms = BHelper.ToMemoryStream(wic);
+                            using var imgM = new MagickImage(ms);
+                            var profiles = GetProfiles(imgM);
+                            using var thumbM = ProcessMagickImageAndReturnThumbnail(imgM, options, ext, true, profiles.ColorProfile, profiles.ExifProfile);
+                            var processed = thumbM ?? imgM;
+
+                            TransformImage(processed, transform);
+                            // The old JXR bridge always requested PBGRA output.
+                            result.Image = BHelper.ToWicBitmapSource(processed, outputHasAlpha: true);
                         }
-
-
-                        // apply final changes
-                        TransformImage(imgM, transform);
-                        result.Image = BHelper.ToWicBitmapSource(imgM.ToBitmapSource());
                     }
                 }
                 catch
@@ -995,11 +1010,14 @@ public static class PhotoCodec
             {
                 if (result.Image.Width > options.Width || result.Image.Height > options.Height)
                 {
-                    imgM.Read(result.Image.CopyPixels(0, 0, result.Image.Width, result.Image.Height));
+                    using var sourceBitmap = BHelper.ToGdiPlusBitmap(result.Image);
+                    imgM.Read(sourceBitmap);
 
                     ApplySizeSettings(imgM, options);
 
-                    result.Image = BHelper.ToWicBitmapSource(imgM.ToBitmapSource(), imgM.HasAlpha);
+                    var replacement = BHelper.ToWicBitmapSource(imgM);
+                    result.Image.Dispose();
+                    result.Image = replacement;
                 }
             }
             else if (result.Source is Bitmap bmp)
@@ -1010,7 +1028,9 @@ public static class PhotoCodec
 
                     ApplySizeSettings(imgM, options);
 
-                    result.Source = imgM.ToBitmap();
+                    var replacement = imgM.ToBitmap();
+                    bmp.Dispose();
+                    result.Source = replacement;
                 }
             }
         }
@@ -1024,10 +1044,16 @@ public static class PhotoCodec
     /// Loads image file with Magick.NET
     /// </summary>
     private static async Task<IgImgData> LoadWithMagickImageAsync(string filename, string ext,
-        MagickReadSettings settings, CodecReadOptions options, ImgTransform? transform, CancellationToken cancelToken)
+        MagickReadSettings settings, CodecReadOptions options, ImgTransform? transform, CancellationToken cancelToken,
+        IgMetadata? metadata = null)
     {
-        using var data = await ReadMagickImageAsync(filename, ext, settings, options, transform, cancelToken);
-        var result = new IgImgData(data);
+        using var memoryPhase = MemoryProbe.Begin("magick.load-and-convert", new { filename });
+        IgImgData result;
+        using (var data = await ReadMagickImageAsync(filename, ext, settings, options, transform, cancelToken, metadata))
+        {
+            result = new IgImgData(data);
+        }
+        MemoryProbe.Capture("magick.intermediates-disposed");
 
         return result;
     }
@@ -1038,109 +1064,132 @@ public static class PhotoCodec
     /// </summary>
     private static async Task<IgMagickReadData> ReadMagickImageAsync(
         string filePath, string ext, MagickReadSettings settings, CodecReadOptions options,
-        ImgTransform? transform, CancellationToken cancelToken)
+        ImgTransform? transform, CancellationToken cancelToken, IgMetadata? metadata = null)
     {
+        using var memoryPhase = MemoryProbe.Begin("magick.read-and-process", new { filePath });
         var result = new IgMagickReadData() { Extension = ext };
         var imgColl = new MagickImageCollection();
         MagickImage? imgM = null;
         try
         {
-            imgColl.Ping(filePath, settings);
-
-            // standardize first frame reading option
-            result.FrameCount = imgColl.Count;
-            result.CanAnimate = CheckAnimatedFormat(imgColl, ext);
-            bool readFirstFrameOnly;
-
-            if (options.FirstFrameOnly == null)
+            // Ordinary JPEG/PNG metadata already supplies dimensions and frame count.
+            // Decode supplies the exact ICC/EXIF profiles; no second Ping is needed.
+            // Keep unusual raw thumbnails, multiple frames and the WIC threshold path intact.
+            if (IsReusableSingleFrameHeader(filePath, metadata)
+                && !metadata!.HeaderHasRawThumbnail
+                && metadata.OriginalWidth < options.MinDimensionToUseWIC
+                && metadata.OriginalHeight < options.MinDimensionToUseWIC)
             {
-                readFirstFrameOnly = imgColl.Count < 2;
+                cancelToken.ThrowIfCancellationRequested();
+                result.FrameCount = metadata.FrameCount;
+                result.CanAnimate = metadata.CanAnimate;
+                MemoryProbe.Capture("magick.header-read-skipped", new { filePath });
+                imgM = (MagickImage)await InitializeSingleMagickImageAsync(filePath,
+                    metadata.OriginalWidth, metadata.OriginalHeight, settings, options, cancelToken, metadata.DetectedFormat);
+                var profiles = GetProfiles(imgM);
+                result.ColorProfile = profiles.ColorProfile;
+                result.ExifProfile = profiles.ExifProfile;
             }
             else
             {
-                readFirstFrameOnly = options.FirstFrameOnly.Value;
-            }
+                imgColl.Ping(filePath, settings);
 
+                // standardize first frame reading option
+                result.FrameCount = imgColl.Count;
+                result.CanAnimate = CheckAnimatedFormat(imgColl, ext);
+                bool readFirstFrameOnly;
 
-            // read all frames
-            if (imgColl.Count > 1 && readFirstFrameOnly is false)
-            {
-                await imgColl.ReadAsync(filePath, settings, cancelToken);
-
-                var i = 0;
-                foreach (var imgFrameM in imgColl)
+                if (options.FirstFrameOnly == null)
                 {
-                    using var imgThumbFrameM = ProcessMagickImageAndReturnThumbnail((MagickImage)imgFrameM, options, ext, false, null, null);
-
-                    // apply transformation
-                    if (i == transform?.FrameIndex || transform?.FrameIndex == -1)
-                    {
-                        TransformImage(imgFrameM, transform);
-                    }
-
-                    i++;
-                }
-
-                result.MultiFrameImage = imgColl;
-                return result;
-            }
-
-
-            // read a single frame only
-            imgM = new MagickImage();
-            var hasRequestedThumbnail = false;
-
-            // get image profiles
-            var profiles = GetProfiles(imgColl[0]);
-            result.ColorProfile = profiles.ColorProfile;
-            result.ExifProfile = profiles.ExifProfile;
-
-
-            if (options.UseEmbeddedThumbnailRawFormats is true)
-            {
-                var profile = imgColl[0].GetProfile("dng:thumbnail");
-
-                try
-                {
-                    // try to get thumbnail
-                    if (profile != null
-                        && profile.ToByteArray() is byte[] thumbnailData)
-                    {
-                        imgM.Ping(thumbnailData);
-
-                        // check min size
-                        if (imgM.Width > options.EmbeddedThumbnailMinWidth
-                            && imgM.Height > options.EmbeddedThumbnailMinHeight)
-                        {
-                            imgM.Read(thumbnailData, settings);
-                            hasRequestedThumbnail = true;
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            if (!hasRequestedThumbnail)
-            {
-                imgM.Dispose();
-                imgM = null;
-
-                // check if the image size is not huge
-                var imgWidth = imgColl[0].BaseWidth;
-                var imgHeight = imgColl[0].BaseHeight;
-                var isHuge = imgWidth >= options.MinDimensionToUseWIC
-                    || imgHeight >= options.MinDimensionToUseWIC;
-                var canOpenWithWIC = WicDecoder.SupportsFileExtensionForDecoding(ext);
-
-                // use WIC to load huge image
-                if (isHuge && canOpenWithWIC)
-                {
-                    // we will open with WIC later
+                    readFirstFrameOnly = imgColl.Count < 2;
                 }
                 else
                 {
-                    imgM = (MagickImage)await InitializeSingleMagickImageAsync(filePath,
-                        imgWidth, imgHeight, settings, options, cancelToken);
+                    readFirstFrameOnly = options.FirstFrameOnly.Value;
+                }
+
+
+                // read all frames
+                if (imgColl.Count > 1 && readFirstFrameOnly is false)
+                {
+                    if (settings.Format == MagickFormat.Unknown) settings.Format = imgColl[0].Format;
+                    await imgColl.ReadAsync(filePath, settings, cancelToken);
+
+                    var i = 0;
+                    foreach (var imgFrameM in imgColl)
+                    {
+                        using var imgThumbFrameM = ProcessMagickImageAndReturnThumbnail((MagickImage)imgFrameM, options, ext, false, null, null);
+
+                        // apply transformation
+                        if (i == transform?.FrameIndex || transform?.FrameIndex == -1)
+                        {
+                            TransformImage(imgFrameM, transform);
+                        }
+
+                        i++;
+                    }
+
+                    result.MultiFrameImage = imgColl;
+                    return result;
+                }
+
+
+                // read a single frame only
+                imgM = new MagickImage();
+                var hasRequestedThumbnail = false;
+
+                // get image profiles
+                var profiles = GetProfiles(imgColl[0]);
+                result.ColorProfile = profiles.ColorProfile;
+                result.ExifProfile = profiles.ExifProfile;
+
+
+                if (options.UseEmbeddedThumbnailRawFormats is true)
+                {
+                    var profile = imgColl[0].GetProfile("dng:thumbnail");
+
+                    try
+                    {
+                        // try to get thumbnail
+                        if (profile != null
+                            && profile.ToByteArray() is byte[] thumbnailData)
+                        {
+                            imgM.Ping(thumbnailData);
+
+                            // check min size
+                            if (imgM.Width > options.EmbeddedThumbnailMinWidth
+                                && imgM.Height > options.EmbeddedThumbnailMinHeight)
+                            {
+                                imgM.Read(thumbnailData, settings);
+                                hasRequestedThumbnail = true;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                if (!hasRequestedThumbnail)
+                {
+                    imgM.Dispose();
+                    imgM = null;
+
+                    // check if the image size is not huge
+                    var imgWidth = imgColl[0].BaseWidth;
+                    var imgHeight = imgColl[0].BaseHeight;
+                    var isHuge = imgWidth >= options.MinDimensionToUseWIC
+                        || imgHeight >= options.MinDimensionToUseWIC;
+                    var canOpenWithWIC = WicDecoder.SupportsFileExtensionForDecoding(ext);
+
+                    // use WIC to load huge image
+                    if (isHuge && canOpenWithWIC)
+                    {
+                        // we will open with WIC later
+                    }
+                    else
+                    {
+                        imgM = (MagickImage)await InitializeSingleMagickImageAsync(filePath,
+                            imgWidth, imgHeight, settings, options, cancelToken, imgColl[0].Format);
+                    }
                 }
             }
 
@@ -1158,6 +1207,7 @@ public static class PhotoCodec
                 TransformImage(imgM, transform);
 
                 result.SingleFrameImage = imgM;
+                MemoryProbe.Track(imgM, "magick.processed", null, "Native ImageMagick pixels; bytes not measured");
             }
             // use WIC to load huge image
             else
@@ -1186,6 +1236,20 @@ public static class PhotoCodec
 
     }
 
+    private static bool IsReusableSingleFrameHeader(string filePath, IgMetadata? metadata)
+    {
+        if (metadata is not { HeaderReadSucceeded: true, FrameCount: 1, CanAnimate: false }
+            || !metadata.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)
+            || Path.GetExtension(filePath).ToUpperInvariant() is not (".JPG" or ".JPEG" or ".JFIF" or ".PNG")) return false;
+        try
+        {
+            // Do not reuse a header if a file was replaced between metadata and decode.
+            var file = new FileInfo(filePath);
+            return file.Length == metadata.FileSize && file.LastWriteTime == metadata.FileLastWriteTime;
+        }
+        catch { return false; }
+    }
+
 
     /// <summary>
     /// Initialize the single-frame <paramref name="imgM"/>,
@@ -1194,8 +1258,10 @@ public static class PhotoCodec
     /// </summary>
     public static async Task<IMagickImage> InitializeSingleMagickImageAsync(
         string srcFilePath, uint srcWidth, uint srcHeight,
-        MagickReadSettings settings, CodecReadOptions options, CancellationToken cancelToken)
+        MagickReadSettings settings, CodecReadOptions options, CancellationToken cancelToken,
+        MagickFormat detectedFormat = MagickFormat.Unknown)
     {
+        using var memoryPhase = MemoryProbe.Begin("magick.decode", new { srcFilePath, srcWidth, srcHeight });
         var imgM = new MagickImage();
 
         // the image is larger than the supported dimension
@@ -1206,7 +1272,11 @@ public static class PhotoCodec
         {
             try
             {
+                // ReadAsync(filename) can select a stream decoder from the extension.
+                // Keep the actual format found by Ping for mislabeled downloads.
+                if (settings.Format == MagickFormat.Unknown) settings.Format = detectedFormat;
                 await imgM.ReadAsync(srcFilePath, settings, cancelToken);
+                MemoryProbe.Track(imgM, "magick.decoded", null, "Native ImageMagick pixels; bytes not measured");
                 return imgM;
             }
             catch { imgM.Dispose(); throw; }
@@ -1267,6 +1337,7 @@ public static class PhotoCodec
         #region Resize with Magick.NET
 
         // load full image data
+        if (settings.Format == MagickFormat.Unknown) settings.Format = detectedFormat;
         await imgM.ReadAsync(srcFilePath, settings, cancelToken);
 
         var newSize = GetMaxImageRenderSize(imgM.BaseWidth, imgM.BaseHeight);
@@ -1335,6 +1406,7 @@ public static class PhotoCodec
         CodecReadOptions options, string ext, bool requestThumbnail,
         IColorProfile? colorProfile, IExifProfile? exifProfile)
     {
+        using var memoryPhase = MemoryProbe.Begin("magick.process", new { ext, requestThumbnail });
         IMagickImage? thumbM = null;
 
         // preprocess image, read embedded thumbnail if any
@@ -1378,6 +1450,7 @@ public static class PhotoCodec
 
                 if (imgColor != null)
                 {
+                    using var colorPhase = MemoryProbe.Begin("magick.icc", new { target = options.ColorProfileName, hasEmbeddedProfile = colorProfile != null });
                     refImgM.TransformColorSpace(
                         //set default color profile to sRGB
                         colorProfile ?? ColorProfiles.SRGB,

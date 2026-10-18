@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 Derived from ImageGlass v9, Copyright (C) 2010 - 2026 DUONG DIEU PHAP.
 ImageCrystal modifications, 2026. GPL-3.0-or-later; see LICENSE.

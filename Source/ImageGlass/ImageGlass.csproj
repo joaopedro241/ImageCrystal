@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <!-- ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt. -->
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -15,10 +16,12 @@
         <RootNamespace>ImageGlass</RootNamespace>
         <Product>ImageCrystal</Product>
         <AssemblyTitle>ImageCrystal</AssemblyTitle>
-        <Description>A lightweight, versatile image viewer</Description>
-        <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
-        <Company>Duong Dieu Phap</Company>
-        <Version>9.6.1.807</Version>
+        <Description>A Windows continuation of ImageGlass v9 with lower memory overhead and predictable background work</Description>
+        <Copyright>ImageCrystal modifications © 2026 xenon; ImageGlass © 2010-2026 Duong Dieu Phap and contributors</Copyright>
+        <Company>ImageCrystal contributors</Company>
+        <Version>9.7.0</Version>
+        <AssemblyVersion>9.7.0.0</AssemblyVersion>
+        <InformationalVersion>9.7.0</InformationalVersion>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

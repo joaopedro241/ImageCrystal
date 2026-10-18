@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -184,18 +185,6 @@ public partial class FrmSettings : WebForm
         else if (e.Name.Equals("Lnk_UserConfigFile", StringComparison.Ordinal))
         {
             _ = OpenUserConfigFileAsync(e.Data);
-        }
-        else if (e.Name.Equals("Btn_EnableStartupBoost", StringComparison.Ordinal))
-        {
-            _ = SetStartupBoostAsync(true);
-        }
-        else if (e.Name.Equals("Btn_DisableStartupBoost", StringComparison.Ordinal))
-        {
-            _ = SetStartupBoostAsync(false);
-        }
-        else if (e.Name.Equals("Lnk_OpenStartupAppsSetting", StringComparison.Ordinal))
-        {
-            _ = BHelper.OpenUrlAsync("ms-settings:startupapps");
         }
         #endregion // Tab General
 
@@ -587,19 +576,6 @@ public partial class FrmSettings : WebForm
         return string.Empty;
     }
 
-
-    /// <summary>
-    /// Sets Startup Boost setting.
-    /// </summary>
-    private static async Task SetStartupBoostAsync(bool enable)
-    {
-        var cmd = enable
-            ? IgCommands.SET_STARTUP_BOOST
-            : IgCommands.REMOVE_STARTUP_BOOST;
-
-        // run command and show the results
-        _ = await Config.RunIgcmd($"{cmd} {IgCommands.SHOW_UI}");
-    }
 
     #endregion // Private methods
 

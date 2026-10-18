@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 import './main';
 
 
@@ -9,8 +10,6 @@ const onButtonClicked = (e: Event) => {
   post(btnEl.id);
 };
 
-query('#BtnImageGlassStore').addEventListener('click', onButtonClicked, false);
-query('#BtnDonate').addEventListener('click', onButtonClicked, false);
 query('#BtnClose').addEventListener('click', onButtonClicked, false);
 queryAll('[data-license]').forEach(el => {
   el.addEventListener('click', () => post('ViewLicenseFile', el.getAttribute('data-license')), false);

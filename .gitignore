@@ -181,3 +181,14 @@ Setup/Assets/WebView2_Runtime/
 artifacts/
 *.log
 .npm-cache/
+
+# Local upstream checkout, investigations and personal settings (never published)
+/reference/
+/local/
+/memory-probe-v9/
+/npm-cache/
+/dist/
+igconfig.json
+igconfig.admin.json
+ThumbnailsCache/
+**/WebUI/dist/

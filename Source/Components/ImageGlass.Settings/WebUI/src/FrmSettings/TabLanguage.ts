@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 import { ILanguage } from '@/@types/FrmSettings';
 import { getChangedSettingsFromTab } from '@/helpers';
 
@@ -49,7 +50,15 @@ export default class TabLanguage {
     const lang = _pageSettings.langList.find(i => i.FileName === langFileName);
     if (!lang) return;
 
-    query('#Section_LanguageContributors').innerText = lang.Metadata.Author;
+    const languageAuthors = lang.Metadata.Author
+      .replace(/Duong Dieu Phap\s*(\(original author\))?/gi, '')
+      .replace(/xenon/gi, '')
+      .trim().replace(/^[,;\s]+|[,;\s]+$/g, '');
+    query('#Section_LanguageContributors').innerText = [
+      'xenon',
+      'Duong Dieu Phap (original author)',
+      ...(languageAuthors ? [languageAuthors] : []),
+    ].join('\n');
   }
 
 

@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -333,37 +334,4 @@ public static class Functions
     }
 
 
-    /// <summary>
-    /// Sets Startup Boost.
-    /// </summary>
-    public static IgExitCode SetStartupBoost(bool enable)
-    {
-        var langPath = "FrmSettings._StartupBoost";
-
-        return Run(() =>
-        {
-            var error = App.SetStartWithOs(enable);
-            if (error != null) throw error;
-
-            if (Program.ShowUi)
-            {
-                var note = enable ? Config.Language["FrmSettings._UnmanagedSettingReminder"] : "";
-                var description = enable ? Config.Language[$"{langPath}._Description"] : "";
-
-                _ = Config.ShowWarning(null,
-                    title: Config.Language[langPath],
-                    heading: Config.Language[$"{langPath}.{(enable ? "_Enabled" : "_Disabled")}"],
-                    description: description,
-                    note: note,
-                    icon: StockIconId.Info);
-            }
-        }, (error) =>
-        {
-            _ = Config.ShowError(null,
-                title: Config.Language[langPath],
-                heading: Config.Language[$"{langPath}._Error"],
-                description: error.Message,
-                details: error.ToString());
-        });
-    }
 }

@@ -1,3 +1,4 @@
+# ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 from pathlib import Path
 from PIL import Image, ImageDraw
 root=Path(__file__).parent

@@ -1,11 +1,7 @@
-### 🟢 Summary
+## Change
 
-<!-- Describe your changes clearly and concisely -->
+Describe the concrete problem and resulting behavior.
 
+## Verification
 
-
-
-
-### 🟢 Contributor License Agreement (CLA)
-By submitting this pull request, I confirm that:
-- [ ] I agree to the [**ImageGlass Contributor License Agreement (CLA)**](../CLA.md)
+Describe relevant checks and any remaining limitations. Retain copyright/license notices and follow CONTRIBUTING.md; no separate CLA is required.

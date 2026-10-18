@@ -1,7 +1,17 @@
-﻿{
+{
+  "ShowGallery": false,
+  "EnableMultiInstances": true,
+  "EnableRealTimeFileUpdate": false,
+  "NeighbourPreloadCount": 0,
+  "ShouldOpenLastSeenImage": false,
+  "ImageInterpolationScaleDown": "HighQualityBicubic",
+  "QuickSetupVersion": 9,
   "_Metadata": {
-    "Description": "ImageGlass configuration file",
-    "Version": 9.1
+    "Version": 9.4,
+    "Description": "ImageCrystal portable defaults"
   },
-  "AutoUpdate": "0"
+  "ImageInterpolationScaleUp": "HighQualityBicubic",
+  "ColorProfile": "CurrentMonitorProfile",
+  "ShouldUseColorProfileForAll": true,
+  "ShowWelcomeImage": false
 }

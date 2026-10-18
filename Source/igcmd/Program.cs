@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -261,22 +262,6 @@ internal static class Program
             }
 
             return (int)Functions.LosslessCompressImage(args[1]);
-        }
-        #endregion
-
-
-        #region SET_STARTUP_BOOST
-        if (topCmd == IgCommands.SET_STARTUP_BOOST)
-        {
-            return (int)Functions.SetStartupBoost(true);
-        }
-        #endregion
-
-
-        #region REMOVE_STARTUP_BOOST
-        if (topCmd == IgCommands.REMOVE_STARTUP_BOOST)
-        {
-            return (int)Functions.SetStartupBoost(false);
         }
         #endregion
 

@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -16,7 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using DirectN;
 using ImageGlass.Base.Photoing.Codecs;
+using ImageGlass.Base.Diagnostics;
 using ImageGlass.Base.WinApi;
 using ImageMagick;
 using Microsoft.Win32.SafeHandles;
@@ -45,6 +48,7 @@ public partial class BHelper
     /// </summary>
     public static WicBitmapSource? ToWicBitmapSource(BitmapSource? bmp, bool hasAlpha = true)
     {
+        using var memoryPhase = MemoryProbe.Begin("wpf.to-wic", new { hasAlpha });
         if (bmp == null)
             return null;
 
@@ -67,6 +71,7 @@ public partial class BHelper
         catch (InvalidOperationException)
         {
             // cannot convert format
+            wicSrc.Dispose();
             return null;
         }
 
@@ -134,6 +139,7 @@ public partial class BHelper
         catch (InvalidOperationException)
         {
             // cannot convert format
+            wicSrc.Dispose();
             return null;
         }
 
@@ -197,8 +203,7 @@ public partial class BHelper
             default:
                 using (var imgM = new MagickImage(ByteData, settings))
                 {
-                    var bmp = imgM.ToBitmapSource();
-                    src = BHelper.ToWicBitmapSource(bmp, imgM.HasAlpha);
+                    src = BHelper.ToWicBitmapSource(imgM);
                 }
                 break;
         }
@@ -212,6 +217,7 @@ public partial class BHelper
         catch (InvalidOperationException)
         {
             // cannot convert format
+            src.Dispose();
             return null;
         }
         return src;
@@ -711,7 +717,7 @@ public partial class BHelper
 
 
         // build settings
-        var outputMs = new MemoryStream(); // cannot use `using` here
+        using var outputMs = new MemoryStream();
         var settings = new ProcessImageSettings()
         {
             Width = width,
@@ -751,7 +757,21 @@ public partial class BHelper
         });
 
 
-        return ToWicBitmapSource(outputMs);
+        using var decoded = ToWicBitmapSource(outputMs);
+        if (decoded == null) return null;
+        // Detach the result from the PNG decoder/stream before disposing them.
+        WicBitmapSource? result = null;
+        try
+        {
+            result = new WicBitmapSource(decoded.Width, decoded.Height, decoded.PixelFormat);
+            using (var bitmap = result.AsBitmap())
+                bitmap.Object.SetResolution(decoded.DpiX, decoded.DpiY).ThrowOnError();
+            result.WithLock(WICBitmapLockFlags.WICBitmapLockWrite, locked =>
+                decoded.CopyPixels(0, 0, decoded.Width, decoded.Height,
+                    checked((uint)(locked.Stride * decoded.Height)), locked.DataPointer, locked.Stride));
+            return result;
+        }
+        catch { result?.Dispose(); throw; }
     }
 
 
@@ -768,34 +788,38 @@ public partial class BHelper
         }
 
 
-        var startIndex = -1;
-        byte[] bytes = [];
-
+        using var memoryPhase = MemoryProbe.Begin("jpeg.motion-video-scan");
+        var cancellation = token ?? CancellationToken.None;
         try
         {
-            bytes = await File.ReadAllBytesAsync(path, token ?? default);
-        }
-        catch { }
-
-
-        // find the start index of the video data
-        for (int i = 0; i < bytes.Length - 7; i++)
-        {
-            if (bytes[i + 4] == 0x66
-              && bytes[i + 5] == 0x74
-              && bytes[i + 6] == 0x79
-              && bytes[i + 7] == 0x70)
+            cancellation.ThrowIfCancellationRequested();
+            await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            // Seven retained bytes cover an eight-byte MP4 header split across reads.
+            var buffer = new byte[64 * 1024];
+            var carry = 0;
+            int read;
+            while ((read = await stream.ReadAsync(buffer.AsMemory(carry), cancellation).ConfigureAwait(false)) > 0)
             {
-                startIndex = i;
-                break;
+                var count = carry + read;
+                var match = count >= 8 ? buffer.AsSpan(4, count - 4).IndexOf("ftyp"u8) : -1;
+                if (match >= 0)
+                {
+                    // Preserve the existing first-ftyp behavior, including the box size.
+                    var start = stream.Position - count + match;
+                    var video = new byte[checked((int)(stream.Length - start))];
+                    stream.Position = start;
+                    await stream.ReadExactlyAsync(video, cancellation).ConfigureAwait(false);
+                    return video;
+                }
+                carry = Math.Min(7, count);
+                Buffer.BlockCopy(buffer, count - carry, buffer, 0, carry);
             }
         }
-        if (startIndex == -1) return null;
-
-        // get video binary data
-        var videoBytes = bytes[startIndex..bytes.Length];
-
-        return videoBytes;
+        // Motion detection is optional; missing files, cancellation and read errors
+        // must not interrupt the image viewer.
+        catch { }
+        return null;
     }
 
 

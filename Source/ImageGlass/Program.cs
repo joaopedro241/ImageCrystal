@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -18,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using D2Phap;
 using ImageGlass.Base;
+using ImageGlass.Base.Diagnostics;
 using ImageGlass.Base.InstanceManagement;
 using ImageGlass.Base.WinApi;
 using ImageGlass.Settings;
@@ -66,12 +68,6 @@ internal static class Program
     /// </summary>
     public static string[] Args { get; set; } = [];
 
-    /// <summary>
-    /// Gets value to indicates this ImageGlass instance is in <see cref="IgCommands.STARTUP_BOOST"/> mode.
-    /// In <see cref="IgCommands.STARTUP_BOOST"/> mode,
-    /// ImageGlass UI is totally hiden and its process auto-closes after a few seconds, user settings are not saved.
-    /// </summary>
-    public static bool IsStartupBoostMode => Program.Args.Contains(IgCommands.STARTUP_BOOST);
 
 
     /// <summary>
@@ -80,6 +76,7 @@ internal static class Program
     [STAThread]
     static void Main()
     {
+        MemoryProbe.Capture("startup.entry");
         Program.Args = Environment.GetCommandLineArgs();
 
 
@@ -113,6 +110,7 @@ internal static class Program
         {
             // load application configs
             Config.Load();
+            MemoryProbe.Capture("startup.config-loaded");
         }
         catch (Exception ex)
         {
@@ -147,6 +145,7 @@ internal static class Program
 
         // dispose foreground shell
         ForegroundShell = null;
+        MemoryProbe.Capture("shutdown");
     }
 
 
@@ -163,7 +162,7 @@ internal static class Program
     {
         var requiredQuickSetup = false;
 
-        if (Config.QuickSetupVersion < Const.QUICK_SETUP_VERSION && !IsStartupBoostMode)
+        if (Config.QuickSetupVersion < Const.QUICK_SETUP_VERSION)
         {
             FrmMain.IG_OpenQuickSetupDialog();
 

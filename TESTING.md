@@ -1,23 +1,30 @@
-# ImageCrystal test 1
+# Testing ImageCrystal 9.7
 
-Run **ImageCrystal.exe** directly from this folder. No installer or .NET installation is needed: this is a self-contained Windows x64 build. WebView2 remains an optional system dependency for graphical Settings, About and SVG viewing, as in upstream v9. Raster viewing does not need it.
+Run `./Build-Test.ps1` to build the portable application and execute the regression harness against those binaries. `Build-Release.ps1` always runs the same checks and rejects mismatched versions or private files in release output.
 
-This test starts with separate portable preferences (`igconfig.json` beside the executable), zero neighbour preloading, folder monitoring off, gallery hidden, the current monitor's colour profile, and high-quality bicubic scaling. It does not import your installed ImageGlass preferences. The original renderer remains in use.
+## Automated coverage
 
-Please try:
+The test7 implementation passed 117 checks. The final release build logs its own result. Coverage includes JPEG/PNG pixel readability after native disposal, ICC processing, alpha, EXIF rotation, bounded bitmap export, WIC ownership, thumbnails, resize/base64/clipboard paths, animation frames, zero/one-neighbour preloading, cancellation/list mutations, missing-file navigation, order preservation, motion-video buffer boundaries, header reuse/replaced files, mislabeled extensions and toolbar icon reuse/disposal.
 
-1. Open JPEGs, including the 4000×6000 and 8K examples. Check ICC-managed colour, zoom, pan, fit and 100% viewing.
-2. Open your usual number of separate windows. Compare **Private working set**, **Commit size**, CPU while idle, and GPU dedicated/shared memory against v9 using the same images/settings. Compressed JPEG size is not decoded pixel size. Full-resolution CPU and GPU images still consume memory; this first pass does not introduce tiled decoding or GPU eviction.
-3. In Settings → Image, check **Neighbour preloading**. At 0, navigation decodes only the requested image. At 1, it preloads one image in each direction. Switching back to 0 releases neighbours. Large-folder filename snapshots still exist.
-4. Use copied test images to try Delete (Recycle Bin), Shift+Delete, confirmation cancellation, and deleting the last image. Cancellation or failed deletion must leave the entry available. Shell cancellation is not covered by the automated smoke suite.
-5. Open a folder, delete some neighbouring files externally, then navigate forward/backward. Missing entries should be skipped without an error. Try all entries missing and navigation with wraparound disabled.
-6. Open from Explorer with a nonalphabetical sort order and enable the existing Explorer-order option. The initial snapshot order should be preserved. Folder monitoring is optional, off by default; enable it to test create/rename/delete notifications. With it off, newly added files need an explicit folder reload.
-7. Try a GIF, multipage TIFF, transparent PNG, local SVG, clipboard and save/crop. Embedded HTTP/HTTPS assets in WebView2 are blocked; an SVG that depends on remote assets may display incompletely. Explicit help links open your normal browser. The Edge runtime's own external behaviour is not certified by this test.
+JPEG data named .png or .heic and PNG data named .jpg are synthetic regression cases. Two user-supplied JPEGs with misleading extensions also decoded successfully. These do not establish compatibility with every genuine HEIC variant. The library reports HEIC decoding support.
 
-The updater, startup update requests, update notifications and update UI were removed. No public GitHub repository or release was created yet.
+## Manual release checks
 
-Forced full garbage collections after image changes were also removed. Managed memory may remain allocated longer before normal collection; compare CPU pauses and commit as well as the Task Manager memory number.
+1. Launch the portable app empty and with your usual JPEG/PNG files. Check ICC colors, transparency, EXIF rotation, fit/100%, bicubic zoom and panning.
+2. Drop a large image, a small image and the large image again into one window. Test unload, clipboard paste and closing, including files from different folders.
+3. At neighbour preloading 0, only the requested image should decode. At 1, one neighbour per direction is eligible; returning to 0 releases neighbours. File-name snapshots still exist at zero.
+4. Use disposable copies for Delete/Shift+Delete and cancellation. A failed or canceled shell deletion must retain the entry. Shell confirmation cancellation needs manual coverage.
+5. Remove neighbours externally and navigate forward/back. Missing files should be skipped, including cached entries; all-missing folders must terminate navigation. Check Explorer order when opening from Explorer.
+6. Check PNG alpha, GIF animation, native TIFF frames, real HEIC/AVIF/JXL/RAW samples and motion photos if those formats matter to you. Optional tools and all decoder variants are not exhaustively covered by the smoke suite.
+7. Change toolbar size, switch light/dark theme and move between monitors with different scaling. Check About/version/credits, graphical Settings and License links with WebView2 installed.
+8. Compare memory using the same file/settings and distinguish private working set, total working set, private commit and GPU memory. Idle CPU should not be driven by deleted polling loops. Large decoded CPU/GPU images remain allocated by design.
 
-Automated tests cover decoder disposal, readable JPEG/WIC pixels, PNG alpha, thumbnails, native GIF and Magick animation, TIFF, zero/one neighbour behaviour, changing to zero, cancellation, changing the list during preloading, permanent deletion of a generated fixture, missing-file navigation, all-missing termination and preservation of snapshot order.
+## Known limitations
 
-Please report the image dimensions, format, preloading setting and the steps for any regression. This is the first local test build, not a finished release.
+- Full-resolution CPU and GPU image storage remains; compressed file size is not decoded memory size.
+- A pre-existing Magick multipage TIFF roundtrip color issue was observed in older and current prototypes. Synthetic native WIC red/blue frame rendering passed; not every TIFF decoding/export path is validated.
+- Upstream v9 does not automatically reapply the monitor color profile when moving the window between monitors.
+- Graphical Settings/About and WebView2 SVG rendering require WebView2. ARM64 is not validated for the first release.
+- Memory improvements do not imply a consistent startup/loading speedup. The short empty-startup/large-JPEG comparison showed no reliable gain.
+
+Report dimensions, format, relevant settings and reproduction steps. Use safe shareable samples and review diagnostic logs for personal paths before attaching them.

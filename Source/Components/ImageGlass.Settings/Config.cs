@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -171,7 +172,7 @@ public static class Config
     /// <summary>
     /// Gets, sets welcome picture value
     /// </summary>
-    public static bool ShowWelcomeImage { get; set; } = true;
+    public static bool ShowWelcomeImage { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value of visibility of toolbar on start up
@@ -249,12 +250,12 @@ public static class Config
     /// <summary>
     /// Gets, sets the value indicates that to show last seen image on startup
     /// </summary>
-    public static bool ShouldOpenLastSeenImage { get; set; } = true;
+    public static bool ShouldOpenLastSeenImage { get; set; } = false;
 
     /// <summary>
     /// Gets, sets the value indicates that the ColorProfile will be applied for all or only the images with embedded profile
     /// </summary>
-    public static bool ShouldUseColorProfileForAll { get; set; } = false;
+    public static bool ShouldUseColorProfileForAll { get; set; } = true;
 
     /// <summary>
     /// Gets, sets the value indicates whether to show or hide the Navigation Buttons on viewer
@@ -627,7 +628,7 @@ public static class Config
     /// <summary>
     /// Gets, sets the interpolation mode to render the viewing image when the zoom factor is <c>less than or equals 100%</c>.
     /// </summary>
-    public static ImageInterpolation ImageInterpolationScaleDown { get; set; } = ImageInterpolation.MultiSampleLinear;
+    public static ImageInterpolation ImageInterpolationScaleDown { get; set; } = ImageInterpolation.HighQualityBicubic;
 
     /// <summary>
     /// Gets, sets the interpolation mode to render the viewing image when the zoom factor is <c>greater than 100%</c>.

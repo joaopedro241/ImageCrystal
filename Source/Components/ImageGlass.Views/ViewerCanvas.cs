@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -19,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using D2Phap.DXControl;
 using DirectN;
 using ImageGlass.Base;
+using ImageGlass.Base.Diagnostics;
 using ImageGlass.Base.PhotoBox;
 using ImageGlass.Base.Photoing.Animators;
 using ImageGlass.Base.Photoing.Codecs;
@@ -43,6 +45,8 @@ public partial class ViewerCanvas : DXCanvas
 
     // original WIC image resources
     private WicBitmapSource? _wicImage;
+    private bool _ownsWicImage;
+    private IgImgData? _ownedPreviewData;
     private WicBitmapSource? _wicNavLeftImage;
     private WicBitmapSource? _wicNavRightImage;
 
@@ -3097,6 +3101,7 @@ public partial class ViewerCanvas : DXCanvas
         ImgTransform? transforms = null,
         ColorChannels channels = ColorChannels.RGBA)
     {
+        using var memoryPhase = MemoryProbe.Begin("viewer.set-image", new { frameIndex, isForPreview });
         // reset variables
         _imageDrawingState = ImageDrawingState.NotStarted;
         _animationSource = AnimationSource.None;
@@ -3109,6 +3114,7 @@ public partial class ViewerCanvas : DXCanvas
         // disable animations
         StopCurrentAnimator();
         DisposeImageResources();
+        _ownedPreviewData = isForPreview ? imgData : null;
 
 
         // emit OnImageChanging event
@@ -3128,6 +3134,7 @@ public partial class ViewerCanvas : DXCanvas
 
         if (imgData == null || imgData.IsImageNull)
         {
+            _wicImage = null;
             Refresh(resetZoom);
         }
         else
@@ -3141,17 +3148,20 @@ public partial class ViewerCanvas : DXCanvas
             {
                 var frame = animatedImg.GetFrame((int)frameIndex);
                 _wicImage = BHelper.ToWicBitmapSource(frame.Bitmap as Bitmap);
+                _ownsWicImage = true;
             }
             // viewing single frame of animated GIF
             else if (imgData.Source is Bitmap bmp && !autoAnimate)
             {
                 bmp.SetActiveTimeFrame((int)frameIndex);
                 _wicImage = BHelper.ToWicBitmapSource(bmp);
+                _ownsWicImage = true;
             }
             // viewing non-animated multiple frames
             else if (imgData?.Source is WicBitmapDecoder decoder)
             {
                 _wicImage = decoder.GetFrame((int)frameIndex);
+                _ownsWicImage = true;
             }
             // viewing single frame
             else
@@ -3167,8 +3177,13 @@ public partial class ViewerCanvas : DXCanvas
             }
             else
             {
+                using var uploadPhase = MemoryProbe.Begin("gpu.upload", new { SourceWidth, SourceHeight, isForPreview });
                 _d2dImage = DXHelper.ToD2D1Bitmap(Device, _wicImage);
             }
+
+            if (MemoryProbe.Enabled)
+                MemoryProbe.Track(_d2dImage, isForPreview ? "gpu.preview" : "gpu.main-image", (long)SourceWidth * (long)SourceHeight * 4,
+                    "GPU logical 32bpp texture estimate; not measured VRAM or process RAM");
 
 
             // apply transformations
@@ -3448,12 +3463,24 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     public void DisposeImageResources()
     {
+        using var memoryPhase = MemoryProbe.Begin("viewer.dispose-image-resources");
         Source = ImageSource.Null;
 
-        // only dispose Direct2D resources, don't dispose _wicImage here
+        // Cached/main image pixels are borrowed. Preview owners and frame
+        // wrappers created by this viewer have their own explicit lifetimes.
+        MemoryProbe.MarkDisposed(_d2dImage);
         DXHelper.DisposeD2D1Bitmap(ref _d2dImage);
 
         DisposeAnimator();
+        if (_ownsWicImage)
+        {
+            MemoryProbe.MarkDisposed(_wicImage);
+            _wicImage?.Dispose();
+        }
+        _wicImage = null;
+        _ownsWicImage = false;
+        _ownedPreviewData?.Dispose();
+        _ownedPreviewData = null;
     }
 
     #endregion // Public methods
@@ -3497,7 +3524,8 @@ public partial class ViewerCanvas : DXCanvas
         }
         else if (imgData?.Source is WicBitmapDecoder decoder)
         {
-            var size = decoder.GetFrame((int)frameIndex).Size;
+            using var frame = decoder.GetFrame((int)frameIndex);
+            var size = frame.Size;
 
             SourceWidth = size.Width;
             SourceHeight = size.Height;

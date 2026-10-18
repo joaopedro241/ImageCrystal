@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 import { getChangedSettingsFromTab } from '@/helpers';
 
 export default class TabImage {

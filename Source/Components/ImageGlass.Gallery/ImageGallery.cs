@@ -1,4 +1,5 @@
-﻿/*
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -96,6 +97,14 @@ public partial class ImageGallery : Control, IComponent
     // Cache threads
     internal ThumbnailCacheManager thumbnailCache;
     internal ShellInfoCacheManager shellInfoCache;
+
+    /// <summary>Diagnostic counters, without loading or copying thumbnails.</summary>
+    public object GetMemoryDiagnosticSnapshot() => new
+    {
+        thumbnailEntries = thumbnailCache?.CacheSize ?? 0,
+        estimatedThumbnailPixelBytes = thumbnailCache?.MemoryUsed ?? 0,
+        removedThumbnailPixelBytes = thumbnailCache?.MemoryUsedByRemoved ?? 0,
+    };
     internal FileSystemAdaptor defaultAdaptor = new();
 
     #endregion

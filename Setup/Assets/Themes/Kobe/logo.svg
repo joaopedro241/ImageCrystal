@@ -1,3 +1,4 @@
+<!-- ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
 <rect width="256" height="256" rx="56" fill="#152b46"/>
 <path d="M128 24 214 82 202 170 128 232 54 170 42 82Z" fill="#63d8ed"/>

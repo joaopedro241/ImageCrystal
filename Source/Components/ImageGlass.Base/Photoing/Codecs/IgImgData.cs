@@ -1,3 +1,4 @@
+// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -17,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageMagick;
+using ImageGlass.Base.Diagnostics;
 using WicNet;
 
 namespace ImageGlass.Base.Photoing.Codecs;
@@ -39,6 +41,10 @@ public class IgImgData : IDisposable
 
         if (disposing)
         {
+            using var memoryPhase = MemoryProbe.Begin("image-data.dispose");
+            MemoryProbe.MarkDisposed(Image);
+            MemoryProbe.MarkDisposed(Source);
+            MemoryProbe.MarkDisposed(this);
             // Free any other managed objects here.
             Image?.Dispose();
             Image = null;
@@ -100,14 +106,15 @@ public class IgImgData : IDisposable
     public bool CanAnimate { get; set; } = false;
 
 
-    public IgImgData() { }
+    public IgImgData() { MemoryProbe.Track(this, "image-data.container"); }
 
 
     /// <summary>
     /// Initializes <see cref="IgImgData"/> instance with <see cref="IgMagickReadData"/> value.
     /// </summary>
-    public IgImgData(IgMagickReadData data)
+    public IgImgData(IgMagickReadData data) : this()
     {
+        using var memoryPhase = MemoryProbe.Begin("image-data.convert");
         FrameCount = data.FrameCount;
 
         // multi-frames
@@ -148,8 +155,10 @@ public class IgImgData : IDisposable
         {
             HasAlpha = data.SingleFrameImage?.HasAlpha ?? false;
 
-            var bmpSrc = data.SingleFrameImage?.ToBitmapSource();
-            Image = BHelper.ToWicBitmapSource(bmpSrc, HasAlpha);
+            Image = BHelper.ToWicBitmapSource(data.SingleFrameImage);
         }
+        if (MemoryProbe.Enabled && Image != null)
+            MemoryProbe.Track(Image, "image-data.wic-source", (long)Image.Width * Image.Height * 4,
+                "WIC logical 32bpp output; may be lazy or alias source storage");
     }
 }

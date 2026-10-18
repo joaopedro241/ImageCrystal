@@ -1,81 +1,87 @@
-ImageGlass - A lightweight, versatile image viewer
-===
+# ImageCrystal 9.7
 
-[![Website](https://img.shields.io/badge/www-imageglass.org-0099BC.svg?maxAge=3600&color=%233097B8)](https://imageglass.org)
-[![Total downloads](https://img.shields.io/github/downloads/d2phap/imageglass/total?color=%23d60068&label=Total%20downloads&)](https://imageglass.org/download)
-[![Latest version downloads](https://img.shields.io/github/downloads/d2phap/imageglass/latest/total?color=%23e66700&label=Latest%20version&)](https://imageglass.org/download)
+<img src="Source/Components/ImageGlass.UI/Resources/DefaultLogo.png" alt="ImageCrystal crystal logo" width="96" />
 
-[![Discord](https://img.shields.io/discord/818852544859209748?label=chat&logo=discord&color=%233097B8&style=social)](https://discord.gg/tWjbynH2X8)
-[![Twitter Follow](https://img.shields.io/twitter/follow/duongdieuphap?style=social)](https://twitter.com/duongdieuphap)
-[![GPL Licence](https://img.shields.io/badge/license-GPLv3-green.svg?maxAge=3600)](https://github.com/d2phap/ImageGlass/blob/master/LICENSE)
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/imageglass/localized.svg)](https://crowdin.com/project/imageglass)
+**Continue the ImageGlass v9 experience on Windows.**
 
-ImageGlass is a lightweight software designed for seamless viewing of images in a clean and intuitive interface. With support for over 90 common image formats including `WEBP`, `GIF`, `SVG`, `PNG`, `JXL`, `HEIC`,... ImageGlass also offers advanced features that cater to the needs of both regular users and designers, making it the excellent tool to enhance workflow efficiency.
+ImageCrystal is an independent Windows image viewer forked from [ImageGlass 9.6.1.807](https://github.com/d2phap/ImageGlass/releases/tag/9.6.1.807), before the Avalonia rewrite. It keeps the familiar WinForms interface, Direct2D rendering, ImageMagick decoding, ICC color management and high-quality bicubic zoom, while reducing unnecessary memory allocations and background work.
 
-[![ImageGlass 10 beta 1](https://github.com/user-attachments/assets/3f9c3c6e-e1ee-4ab2-a8e1-2feb2df41e73)](https://imageglass.org/news/imageglass-10-beta-1-is-here-99)
+The goal is a dependable Windows viewer with predictable resource use. This is a separate project maintained by **xenon**, not an official ImageGlass release. Version 9.7 continues our v9-based line and does not imply upstream endorsement.
 
-## 📥 Download
+## Download and run
 
-<a href="https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full">
-  <img height="58" src="https://github.com/d2phap/ImageGlass/assets/3154213/08a071bb-a6ae-420c-b53b-2317004570d4" />
-</a>
+Get the portable Windows x64 ZIP from [ImageCrystal Releases](https://github.com/joaopedro241/ImageCrystal/releases). Extract the complete archive into a writable folder and run **ImageCrystal.exe**. No installer or separate .NET installation is required. Keep the supporting files beside the executable.
 
+- Windows 10/11, x64. ARM64 is not part of the first release.
+- Microsoft WebView2 is required for graphical Settings, About and the optional WebView2 SVG renderer. Ordinary raster viewing does not require it.
+- Portable preferences are stored in `igconfig.json` beside the executable when the folder is writable. Installed ImageGlass preferences are not imported automatically.
+- Optional language packs are supplied in `Language/`; English is built in. Some translations may still use upstream terminology.
+- Update checking has been removed. Install new versions manually from this repository's releases.
 
-### ImageGlass on Microsoft Store!
-- If you want to support the development of ImageGlass, you can purchase ImageGlass from Microsoft Store.
-- Alternatively, you can use the one-time donation from [♥ GitHub Sponsor](https://github.com/sponsors/d2phap), then drop me a message in [ImageGlass Discord](https://discord.gg/tWjbynH2X8) or [email](https://imageglass.org/about), and I will send the code shortly.
-- ImageGlass Store provides the convenience of fast, easy installation onto all of your Windows devices along with fully automatic, behind-the-scenes updates with all the newest features, improvements, and fixes.
+## Improvements since ImageGlass v9
 
-### Difference Between ImageGlass Classic and Store Release
-|  | ImageGlass Classic | [ImageGlass Store](https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full) | 
-| -- | -- | -- |
-| [All features](https://imageglass.org/docs/features), <br/>including Explorer sort order | ✅ | ✅ |
-| [Advanced configs<br/>for Power users](https://imageglass.org/docs/app-configs) | ✅ | ✅ |
-| Distribution | 🌐[ImageGlass.org](https://imageglass.org) and various sources | 🛍️[Microsoft Store](https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full) only |
-| Price | 🆓 Free | 🪙Fee, with a 7-day trial |
-| Commercial use | ✅ Recommended to [register](https://imageglass.org/license) | ✅ |
-| Auto-update | ❌ User-managed | ✅ Seamless auto-updates |
-| Hotfix update | ❌ Available in official releases only | ✅ Available as soon as they are fixed |
+### Memory and image ownership
 
+- Export ImageMagick pixels directly into native WIC storage in blocks of at most 64 KiB. Normal raster viewing avoids the full-image managed export array and WPF bitmap bridge.
+- Dispose temporary Magick images/collections, previews, selected-frame wrappers, resize/export resources and decoder intermediates promptly, including error and cancellation paths.
+- Release a directly opened photo after replacement, unload or window disposal, addressing retained native image storage after dropping another photo into the same window.
+- Make animation-frame and WIC decoder ownership explicit, keeping displayed pixels alive after temporary decoder containers are released.
+- Stream JPEG motion-photo detection through a small buffer instead of allocating an array for the whole compressed file.
+- Remove forced full garbage collections and delayed heap-compaction calls from image changes, unload and slideshow paths.
 
-## 🪁 System Requirements
-- Windows 10/11 64-bit, version 1809 (build 17763) or later
-- Optional: [WebView2 Runtime 64-bit v119.0.2151 or later](https://go.microsoft.com/fwlink/p/?LinkId=2124703)
+### Predictable preloading and background work
 
+- Replace **ImageBooster** with **Neighbour preloading**, default **0**. Zero schedules no neighbour decode/metadata jobs and releases cached neighbours.
+- Positive counts mean that many neighbours in each direction. Work runs in finite, serial, cancellable batches, with file-size and dimension limits.
+- Remove the deletion polling thread and cache-completion polling. Optional folder monitoring uses events and defaults to off.
+- Preserve folder/Explorer order snapshots. Skip externally removed files when navigating; update the list after viewer deletion only when the shell operation succeeds.
+- Remove Startup Boost, including settings and command-line controls.
 
-## 👨‍💻 Development
-- Windows 11
-- Visual Studio 2026
+### Loading, rendering and defaults
 
-The `develop` branch contains the latest commits while the `prod` branch is for the final stable release.
+- Reuse foreground metadata and eligible JPEG/PNG header facts instead of repeating header scans. Changed files, multiple frames and special decoder paths retain their fallbacks.
+- Use the detected format for misleading extensions, such as JPEG data named `.png` or `.heic`.
+- Reuse each toolbar button's current icon when its name, theme and pixel size are unchanged; dispose replacements instead of retaining old DPI sizes.
+- Default both enlargement and reduction to high-quality bicubic interpolation.
+- Enable current-monitor ICC processing, including images without an embedded profile, by default.
+- Start without a welcome or last-seen image and with the gallery hidden. These remain configurable.
 
+### Independent and quieter
 
-## 🗝️ License
-ImageGlass is free for both personal and commercial use, except the Store version. If you intend to use ImageGlass at your place of business or for commercial purposes, it's recommended but not enforced to register at https://imageglass.org/license.
+- Remove the updater, automatic checks, update prompts and associated settings.
+- Block remote HTTP/HTTPS resources in embedded WebView2 pages and remove tracking parameters added by the app to browser links. Explicit external help links remain available.
+- Use original crystal artwork, independent ImageCrystal application/protocol/association identifiers and separate configuration identity.
+- Include opt-in local memory diagnostics and a regression harness. Diagnostics stay off during ordinary launches.
 
+See [CHANGELOG.md](CHANGELOG.md) for the complete change list and [TESTING.md](TESTING.md) for verification coverage.
 
-## 📚 Docs
-- [Features](https://imageglass.org/docs/features)
-- [Supported formats](https://imageglass.org/docs/supported-formats)
-- [Shortcuts](https://imageglass.org/docs/ui-shortcuts-reference)
-- [App configs](https://imageglass.org/docs/app-configs)
-- [Command lines](https://imageglass.org/docs/command-line-utilities)
-- [EULA](https://imageglass.org/license)
+## What remains unchanged
 
-For more information about ImageGlass, go to [ImageGlass Docs](https://imageglass.org/docs).
+ImageMagick, WinForms, WIC and Direct2D remain central to the app. Full-resolution CPU storage and GPU textures are retained for responsive zoom and panning. A small compressed JPEG can therefore still require much more RAM and VRAM than its file size.
 
+This release does not add viewport-only decoding, a shared process for all windows, GPU eviction, a new HDR pipeline, Avalonia or a gallery redesign. OpenCL is unchanged. Some v9 limitations remain, including automatic monitor-profile changes when moving between displays and the multipage TIFF issue in [TESTING.md](TESTING.md).
 
-## 🧑‍🤝‍🧑 Community and Support
-- [GitHub issues](https://github.com/d2phap/ImageGlass/issues)
-- [ImageGlass Discord](https://discord.gg/tWjbynH2X8)
+Observed memory improvements concern specific workloads and our earlier prototypes, not a universal percentage against upstream. Small loading changes have not demonstrated a consistent empty-startup or large-JPEG speedup.
 
+## Build from source
 
-## 🛣️ ImageGlass Roadmap Update – 2026
-[![ig_timeline](https://github.com/user-attachments/assets/9cf2a8a4-18f4-4852-ad83-5df79239d93f)](https://github.com/d2phap/ImageGlass/discussions/2287)
+Use Windows, Visual Studio 2026 with **.NET desktop development** and a Windows SDK, .NET 10 SDK, and Node.js 22+ with npm. Full Visual Studio MSBuild is needed for inherited COM references.
 
+```powershell
+# Restore, build the Web UI and portable app, and run the checks:
+.\Build-Test.ps1
+# Subsequent builds with dependencies already restored:
+.\Build-Test.ps1 -SkipRestore
+# Checked, versioned portable/source archives and SHA-256 hashes:
+.\Build-Release.ps1 -SkipRestore
+```
 
-## 💖 This project needs your help!
-If you find ImageGlass useful and would like to support its ongoing development, consider making a donation. Your support, whether financial or simply sharing ImageGlass with others, means the world to me. Every bit helps keep the project alive and free for everyone.
+Development output: `artifacts/ImageCrystal-dev/`. Release output: `artifacts/releases/`. Personal settings, photos, caches, investigations and the upstream reference checkout are excluded from Git. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-Explorer the ways to support at: https://imageglass.org/donate
+## License and credits
 
+ImageCrystal is distributed under **GNU GPL version 3**; existing source-file grants allowing v3 or later are preserved. New original ImageCrystal contributions use GPL-3.0-or-later. See [LICENSE](LICENSE), [NOTICE.ImageCrystal.txt](NOTICE.ImageCrystal.txt) and [third-party notices](THIRD-PARTY-NOTICES.md). Distribute binaries with their corresponding modified source and build instructions.
+
+**Original author:** Duong Dieu Phap and the ImageGlass contributors. **ImageCrystal maintainer:** xenon. ImageGlass's name and original logo belong to their owner; this fork uses its own name/artwork and is not affiliated with or endorsed by ImageGlass. The unmodified upstream license is preserved in [docs/upstream/LICENSE](docs/upstream/LICENSE).
+
+Report ImageCrystal problems [in this fork](https://github.com/joaopedro241/ImageCrystal/issues), rather than asking the original author to support our modifications. See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [privacy notes](docs/PRIVACY.md).
