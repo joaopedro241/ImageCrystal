@@ -1,4 +1,4 @@
-ImageCrystal 9.7.0
+ImageCrystal 9.8.0
 Independent Windows continuation of ImageGlass v9
 
 Upstream: https://github.com/d2phap/ImageGlass
@@ -25,7 +25,7 @@ are reference records, not new ImageCrystal contribution terms.
 
 ImageGlass's name and original logo are not ImageCrystal branding.
 This is an independent fork, not an official ImageGlass release or
-endorsed by its original author. Version 9.7 is ImageCrystal's version.
+endorsed by its original author. Version 9.8 is ImageCrystal's version.
 
 Distribute the corresponding modified source and build instructions
 with binaries through the same release location, tied to the exact

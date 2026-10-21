@@ -1,4 +1,4 @@
-# ImageCrystal 9.7
+# ImageCrystal 9.8
 
 <img src="Source/Components/ImageGlass.UI/Resources/DefaultLogo.png" alt="ImageCrystal crystal logo" width="96" />
 
@@ -6,7 +6,7 @@
 
 ImageCrystal is an independent Windows image viewer forked from [ImageGlass 9.6.1.807](https://github.com/d2phap/ImageGlass/releases/tag/9.6.1.807), before the Avalonia rewrite. It keeps the familiar WinForms interface, Direct2D rendering, ImageMagick decoding, ICC color management and high-quality bicubic zoom, while reducing unnecessary memory allocations and background work.
 
-The goal is a dependable Windows viewer with predictable resource use. This is a separate project maintained by **xenon**, not an official ImageGlass release. Version 9.7 continues our v9-based line and does not imply upstream endorsement.
+The goal is a dependable Windows viewer with predictable resource use. This is a separate project maintained by **xenon**, not an official ImageGlass release. Version 9.8 continues our v9-based line and does not imply upstream endorsement.
 
 ## Download and run
 
@@ -17,6 +17,14 @@ Get the portable Windows x64 ZIP from [ImageCrystal Releases](https://github.com
 - Portable preferences are stored in `igconfig.json` beside the executable when the folder is writable. Installed ImageGlass preferences are not imported automatically.
 - Optional language packs are supplied in `Language/`; English is built in. Some translations may still use upstream terminology.
 - Update checking has been removed. Install new versions manually from this repository's releases.
+
+## Save a photo session (new in 9.8)
+
+Right-click a photo and choose **Save photo session**, just above **Exit**. The same action is available under **File**. It saves shortcuts for the photos currently displayed across your open ImageCrystal windows, including minimized windows, without copying the images.
+
+Sessions go to `%USERPROFILE%\Documents\ImageCrystal Sessions\yyyy-MM-dd HH-mm-ss - N Photos\`, with a sorted `0 - paths.txt` manifest. Duplicate paths are included once; colliding shortcut/session names receive numbered suffixes. Missing files and capture/shortcut failures have separate reports.
+
+This native feature needs no PowerShell. Restart older ImageCrystal windows with 9.8 to include them. Empty windows, unsaved clipboard images and still-loading images are excluded; unavailable or loading windows are reported. See [the session guide](docs/PHOTO-SESSIONS.md).
 
 ## Improvements since ImageGlass v9
 

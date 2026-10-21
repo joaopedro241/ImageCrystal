@@ -16,6 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
+
 namespace ImageGlass.Base.WinApi;
 
 public static class FileShortcutApi
@@ -35,18 +40,24 @@ public static class FileShortcutApi
     /// <returns></returns>
     public static string GetTargetPathFromShortcut(string shortcutPath)
     {
-        var shell = new IWshRuntimeLibrary.WshShell();
+        IShellLinkW? link = null;
 
         try
         {
-            var shortcut = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(shortcutPath);
-
-            return shortcut.TargetPath ?? "";
+            link = (IShellLinkW)new ShellLinkCom();
+            ((IPersistFile)link).Load(shortcutPath, 0);
+            var path = new StringBuilder(32768);
+            link.GetPath(path, path.Capacity, IntPtr.Zero, 4); // SLGP_RAWPATH: do not resolve/mutate targets.
+            return path.ToString();
         }
         catch // (COMException)
         {
             // A COMException is thrown if the file is not a valid shortcut (.lnk) file 
             return "";
+        }
+        finally
+        {
+            if (link != null) Marshal.FinalReleaseComObject(link);
         }
     }
 

@@ -13,8 +13,8 @@
         <AssemblyTitle>Igcmd: Command-line utility for ImageCrystal</AssemblyTitle>
         <Copyright>ImageCrystal modifications © 2026 xenon; ImageGlass © 2010-2026 Duong Dieu Phap and contributors</Copyright>
         <Company>ImageCrystal contributors</Company>
-        <Version>9.7.0</Version>
-        <AssemblyVersion>9.7.0.0</AssemblyVersion>
+        <Version>9.8.0</Version>
+        <AssemblyVersion>9.8.0.0</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

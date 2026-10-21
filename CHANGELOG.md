@@ -2,6 +2,18 @@
 
 ImageCrystal has independent release numbers. Upstream ImageGlass releases are not ImageCrystal releases.
 
+## 9.8.0 — photo sessions
+
+- Add **Save photo session** to the photo context menu above Exit and to File. Save all open ImageCrystal photos as Windows shortcuts under `%USERPROFILE%\Documents\ImageCrystal Sessions`.
+- Preserve the organizer script's `yyyy-MM-dd HH-mm-ss - N Photos` folder format, sorted unique paths, numbered name collisions, `0 - paths.txt`, missing-file and shortcut-error reports. Report unavailable/loading windows in `0 - capture-errors.txt`.
+- Capture current displayed paths after navigation/replacement/rename rather than launch arguments. Include minimized windows; exclude empty and unsaved clipboard views.
+- Read Unicode-named session shortcuts through the native Windows Shell interface, fixing the inherited WSH reader's failure on those names.
+- Use native C# and same-user local named pipes, with no PowerShell dependency, polling, image reloads or extra image copies. Query only on demand, bound request timeouts/concurrency and release shell COM objects after writing.
+- Save without blocking viewing, prevent repeated clicks in the initiating window, and offer Open folder on completion. Concurrent saves create separate folders.
+- Add regression coverage for cross-process capture, replacement, empty/loading/unavailable windows, cancellation, duplicate paths/names, Unicode, missing files, shortcut targets/errors and concurrent saves.
+
+The portable 9.8.0 candidate passed 149 checks, including actual viewer load/replacement, menu placement, rename, unload and clipboard integration. Visual interaction with the completion dialog and a live minimized window remains a manual release check.
+
 ## 9.7.0 — first ImageCrystal release
 
 Based on ImageGlass **9.6.1.807**, commit `1650ca9f3b8209d4a69a353f804ff6f7c42fc9de`.

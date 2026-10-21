@@ -1,14 +1,18 @@
-# Testing ImageCrystal 9.7
+# Testing ImageCrystal 9.8
 
 Run `./Build-Test.ps1` to build the portable application and execute the regression harness against those binaries. `Build-Release.ps1` always runs the same checks and rejects mismatched versions or private files in release output.
 
 ## Automated coverage
 
-The test7 implementation passed 117 checks. The final release build logs its own result. Coverage includes JPEG/PNG pixel readability after native disposal, ICC processing, alpha, EXIF rotation, bounded bitmap export, WIC ownership, thumbnails, resize/base64/clipboard paths, animation frames, zero/one-neighbour preloading, cancellation/list mutations, missing-file navigation, order preservation, motion-video buffer boundaries, header reuse/replaced files, mislabeled extensions and toolbar icon reuse/disposal.
+The 9.8.0 candidate passed **149 checks**, including the original 117 image-viewing checks and new session checks. Each build logs its own result. Coverage includes JPEG/PNG pixel readability after native disposal, ICC processing, alpha, EXIF rotation, bounded bitmap export, WIC ownership, thumbnails, resize/base64/clipboard paths, animation frames, zero/one-neighbour preloading, cancellation/list mutations, missing-file navigation, order preservation, motion-video buffer boundaries, header reuse/replaced files, mislabeled extensions and toolbar icon reuse/disposal.
 
 JPEG data named .png or .heic and PNG data named .jpg are synthetic regression cases. Two user-supplied JPEGs with misleading extensions also decoded successfully. These do not establish compatibility with every genuine HEIC variant. The library reports HEIC decoding support.
 
 ## Manual release checks
+
+For photo sessions, automated coverage includes native IPC across two processes, current-path replacement, empty/loading/unavailable windows, cancellation, sorted unique paths, Unicode/brackets, missing files, shortcut targets, shell failures, concurrent saves and endpoint disposal. Fixtures and saved test sessions stay under `artifacts/smoke-fixtures`, never in the user's session folder.
+
+Manually open several 9.8 windows, navigate/drop a replacement into one, minimize another, then use **Save photo session** from the context menu and File menu. Confirm the current photos appear under `%USERPROFILE%\Documents\ImageCrystal Sessions`, Open folder works, repeated clicks do not create extra saves, and clipboard/empty windows are excluded. Test a still-open 9.7 window: it should be reported as unavailable rather than saved from stale launch arguments. Test renaming inside the app and externally with folder monitoring enabled.
 
 1. Launch the portable app empty and with your usual JPEG/PNG files. Check ICC colors, transparency, EXIF rotation, fit/100%, bicubic zoom and panning.
 2. Drop a large image, a small image and the large image again into one window. Test unload, clipboard paste and closing, including files from different folders.

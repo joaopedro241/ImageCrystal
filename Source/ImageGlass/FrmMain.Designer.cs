@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 using ImageGlass.Base;
 
 namespace ImageGlass
@@ -40,6 +40,7 @@ namespace ImageGlass
             MnuNewWindow = new ToolStripMenuItem();
             MnuSave = new ToolStripMenuItem();
             MnuSaveAs = new ToolStripMenuItem();
+            MnuSavePhotoSession = new ToolStripMenuItem();
             toolStripMenuItem10 = new ToolStripSeparator();
             MnuOpenWith = new ToolStripMenuItem();
             MnuEdit = new ToolStripMenuItem();
@@ -206,7 +207,7 @@ namespace ImageGlass
             // 
             // MnuFile
             // 
-            MnuFile.DropDownItems.AddRange(new ToolStripItem[] { MnuOpenFile, MnuNewWindow, MnuSave, MnuSaveAs, toolStripMenuItem10, MnuOpenWith, MnuEdit, MnuPrint, MnuShare, toolStripMenuItem12, MnuRefresh, MnuReload, MnuReloadImageList, MnuUnload });
+            MnuFile.DropDownItems.AddRange(new ToolStripItem[] { MnuOpenFile, MnuNewWindow, MnuSave, MnuSaveAs, MnuSavePhotoSession, toolStripMenuItem10, MnuOpenWith, MnuEdit, MnuPrint, MnuShare, toolStripMenuItem12, MnuRefresh, MnuReload, MnuReloadImageList, MnuUnload });
             MnuFile.ImageScaling = ToolStripItemImageScaling.None;
             MnuFile.Name = "MnuFile";
             MnuFile.Size = new Size(198, 40);
@@ -239,6 +240,10 @@ namespace ImageGlass
             MnuSaveAs.Size = new Size(181, 22);
             MnuSaveAs.Text = "[Save image as...]";
             MnuSaveAs.Click += MnuSaveAs_Click;
+            // MnuSavePhotoSession
+            MnuSavePhotoSession.Name = "MnuSavePhotoSession";
+            MnuSavePhotoSession.Text = "Save photo session";
+            MnuSavePhotoSession.Click += MnuSavePhotoSession_Click;
             // 
             // toolStripMenuItem10
             // 
@@ -1265,6 +1270,7 @@ namespace ImageGlass
         public ToolStripMenuItem MnuNewWindow;
         public ToolStripMenuItem MnuSave;
         public ToolStripMenuItem MnuSaveAs;
+        public ToolStripMenuItem MnuSavePhotoSession;
         private ToolStripSeparator toolStripMenuItem10;
         public ToolStripMenuItem MnuOpenWith;
         public ToolStripMenuItem MnuEdit;

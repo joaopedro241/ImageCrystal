@@ -28,14 +28,17 @@ The reference is a separate upstream Git checkout, not a submodule or part of so
 ## Git and versions
 
 - `main`: ImageCrystal development/release source; use short feature branches.
-- `origin`: the future `joaopedro241/ImageCrystal` fork.
+- `origin`: the `joaopedro241/ImageCrystal` fork, with `main` as its default branch.
 - `upstream`: `d2phap/ImageGlass`, with local pushing disabled.
 - `9.6.1.807`: unchanged upstream base tag.
-- `v9.7.0`: planned first release tag, created after final review.
+- `v9.7.0`: first ImageCrystal release tag. Preserve its existing source and release files.
+- `v9.8.0`: photo-session release. Its annotated tag identifies the exact commit used for the portable binary and matching source archive.
 
 Preserve upstream ancestry and authorship. The imported base is a shallow v9 tag checkout; fetch additional upstream history explicitly when required. Do not reinitialize the repository or force-push over copied upstream branches. Set the online default branch to our `main` after publication.
 
 Use semantic versions from 9.7.0. Update VERSION, app/helper project versions, notices and changelog together. These are independent ImageCrystal versions.
+
+Use annotated `vMAJOR.MINOR.PATCH` tags for official GitHub releases. Once published, do not move a release tag or replace its binaries with different code; issue a new patch/minor version instead.
 
 ## Build
 

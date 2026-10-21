@@ -47,6 +47,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $repoPath 'NOTICE.ImageCrystal.txt') -Destination $outputPath -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'THIRD-PARTY-NOTICES.md') -Destination $outputPath -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'docs\PRIVACY.md') -Destination $outputPath -Force
+    Copy-Item -LiteralPath (Join-Path $repoPath 'docs\PHOTO-SESSIONS.md') -Destination $outputPath -Force
     Copy-Item -LiteralPath (Join-Path $repoPath 'docs\upstream\LICENSE') -Destination (Join-Path $outputPath 'License\ImageGlass-upstream.txt') -Force
     # The tracked template is the single source of portable defaults.
     # Existing user preferences are preserved; schema version is not app version.

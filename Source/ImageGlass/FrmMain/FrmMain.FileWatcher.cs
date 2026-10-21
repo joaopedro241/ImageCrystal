@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -150,6 +150,7 @@ public partial class FrmMain
 
         void RenameAction()
         {
+            RenameSessionPhotoPath(oldFilePath, newFilePath);
             // Rename file in image list
             Local.Images.SetFileName(imgIndex, newFilePath);
 

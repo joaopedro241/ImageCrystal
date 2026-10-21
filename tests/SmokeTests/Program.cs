@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 using ImageGlass;
 using ImageGlass.Base;
 using ImageGlass.Base.Diagnostics;
@@ -13,7 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-internal static class SmokeTests
+internal static partial class SmokeTests
 {
     private static int _checks;
     private static void Check(bool condition, string message)
@@ -27,6 +27,7 @@ internal static class SmokeTests
     {
         try
         {
+            if (args.Length > 0 && args[0] == "--photo-session-host") return RunPhotoSessionHost();
             var dir = Path.GetFullPath(args[0]);
             Directory.CreateDirectory(dir);
             RunAsync(dir).GetAwaiter().GetResult();
@@ -38,6 +39,8 @@ internal static class SmokeTests
             TestHeaderReuseAsync(dir).GetAwaiter().GetResult();
             TestMislabeledFilesAsync(dir).GetAwaiter().GetResult();
             TestToolbarIcons(dir);
+            TestPhotoSessionViewer(dir);
+            TestPhotoSessionsAsync(dir).GetAwaiter().GetResult();
             Console.WriteLine($"SUCCESS: {_checks} checks passed.");
             return 0;
         }

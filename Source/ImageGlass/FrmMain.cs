@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -62,6 +62,7 @@ public partial class FrmMain : ThemedForm
     {
         using var memoryPhase = MemoryProbe.Begin("ui.construct");
         InitializeComponent();
+        InitializePhotoSessions();
         InitializeToolbarContext();
         Disposed += (_, _) => SetOwnedDisplayedPhoto(null);
 
@@ -780,6 +781,7 @@ public partial class FrmMain : ThemedForm
             Local.Metadata = null;
             PicMain.SetImage(null);
             SetOwnedDisplayedPhoto(null);
+            SetSessionPhotoPath(null);
             LoadImageInfo();
             return;
         }
@@ -1177,6 +1179,7 @@ public partial class FrmMain : ThemedForm
 
     private void HandleImageProgress_Loading(ImageLoadingEventArgs e)
     {
+        _photoSessionEndpoint?.Update(_sessionPhotoPath, isLoading: true);
         Local.IsImageError = false;
 
         PicMain.ShowMotionButton = false;
@@ -1282,7 +1285,10 @@ public partial class FrmMain : ThemedForm
         // A direct open (Index == -1) is not owned by the folder cache.
         // Release its predecessor only after SetImage has stopped using it.
         if (error == null && (e.UseWebview2 || !(e.Data?.ImgData.IsImageNull ?? true)))
+        {
             SetOwnedDisplayedPhoto(e.Index < 0 ? e.Data : null);
+            SetSessionPhotoPath(e.FilePath);
+        }
         else if (error != null && e.Index < 0)
             e.Data?.Dispose();
 
@@ -2097,6 +2103,8 @@ public partial class FrmMain : ThemedForm
         }
 
         // Exit menu
+        MnuContext.Items.Add(new ToolStripSeparator());
+        MnuContext.Items.Add(MenuUtils.Clone(MnuSavePhotoSession));
         MnuContext.Items.Add(new ToolStripSeparator());//------------
         MnuContext.Items.Add(MenuUtils.Clone(MnuExit));
     }

@@ -19,9 +19,9 @@
         <Description>A Windows continuation of ImageGlass v9 with lower memory overhead and predictable background work</Description>
         <Copyright>ImageCrystal modifications © 2026 xenon; ImageGlass © 2010-2026 Duong Dieu Phap and contributors</Copyright>
         <Company>ImageCrystal contributors</Company>
-        <Version>9.7.0</Version>
-        <AssemblyVersion>9.7.0.0</AssemblyVersion>
-        <InformationalVersion>9.7.0</InformationalVersion>
+        <Version>9.8.0</Version>
+        <AssemblyVersion>9.8.0.0</AssemblyVersion>
+        <InformationalVersion>9.8.0</InformationalVersion>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

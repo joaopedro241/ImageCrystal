@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -376,6 +376,11 @@ public class IgLang : IDictionary<string, string>
 
             #region File
             { "FrmMain.MnuFile", "File" }, //v7.0
+            { "FrmMain.MnuSavePhotoSession", "Save photo session" },
+            { "FrmMain.MnuSavePhotoSession._Empty", "No open photos with saved file paths were found. Clipboard images and empty windows are excluded. If other windows could not be captured, restart them with this ImageCrystal version and try again." },
+            { "FrmMain.MnuSavePhotoSession._Saved", "Saved {0} shortcuts for {1} photo paths" },
+            { "FrmMain.MnuSavePhotoSession._OpenFolder", "Open folder" },
+            { "FrmMain.MnuSavePhotoSession._Partial", "Missing files: {0}. Shortcut failures: {1}. Windows not captured: {2}. See the reports in the session folder." },
             { "FrmMain.MnuOpenFile", "Open file…" }, //v3.0
             { "FrmMain.MnuNewWindow", "Open new window" }, //v7.0
             { "FrmMain.MnuNewWindow._Error", "Cannot open new window because only one instance is allowed" }, //v7.0

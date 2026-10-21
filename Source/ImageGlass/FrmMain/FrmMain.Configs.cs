@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -618,6 +618,7 @@ public partial class FrmMain
         MnuNewWindow.Text = lang[$"{Name}.{nameof(MnuNewWindow)}"];
         MnuSave.Text = lang[$"{Name}.{nameof(MnuSave)}"];
         MnuSaveAs.Text = lang[$"{Name}.{nameof(MnuSaveAs)}"];
+        MnuSavePhotoSession.Text = lang[$"{Name}.{nameof(MnuSavePhotoSession)}"];
 
         MnuOpenWith.Text = lang[$"{Name}.{nameof(MnuOpenWith)}"];
         MnuEdit.Text = lang[$"{Name}.{nameof(MnuEdit)}"];

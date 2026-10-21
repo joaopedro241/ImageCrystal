@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
@@ -131,6 +131,7 @@ public partial class FrmMain
     /// </summary>
     public void IG_Unload()
     {
+        SetSessionPhotoPath(null);
         // cancel the current loading image
         _loadCancelTokenSrc?.Cancel();
 
@@ -1358,6 +1359,7 @@ public partial class FrmMain
 
     public void LoadClipboardImage(WicBitmapSource? img)
     {
+        SetSessionPhotoPath(null);
         // cancel the current loading image
         _loadCancelTokenSrc?.Cancel();
 
@@ -2061,6 +2063,7 @@ public partial class FrmMain
 
 
             // manually update the change if FileWatcher is not enabled
+            RenameSessionPhotoPath(oldFilePath, newFilePath);
             if (!Config.EnableRealTimeFileUpdate)
             {
                 Local.Images.SetFileName(Local.CurrentIndex, newFilePath);

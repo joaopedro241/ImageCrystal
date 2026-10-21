@@ -1,4 +1,4 @@
-// ImageCrystal modifications by xenon, 2026-10-18; see NOTICE.ImageCrystal.txt.
+// ImageCrystal modifications by xenon, 2026-10-21; see NOTICE.ImageCrystal.txt.
 /*
 Derived from ImageGlass v9, Copyright (C) 2010 - 2026 DUONG DIEU PHAP.
 ImageCrystal modifications, 2026. GPL-3.0-or-later; see LICENSE.
@@ -41,6 +41,7 @@ public partial class FrmMain
                 Local.CurrentIndex = -1;
                 Local.Metadata = null;
                 PicMain.SetImage(null);
+                SetSessionPhotoPath(null);
                 SetOwnedDisplayedPhoto(null);
                 LoadImageInfo();
                 return -1;
